@@ -31,6 +31,26 @@ def init_db():
         db.commit()
         print("success init db")
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        if request.form["username"] == app.config['USERNAME'] and request.form["password"] == app.config['PASSWORD']:
+            session["logged_in"] = True
+            print("you have logged in")
+            return redirect(url_for("message.show_message"))
+    return render_template("login.html")
+
+@app.route('/logout')
+def logout():
+    session.pop("logged_in", None)
+    print("you have logged out")
+    return redirect(url_for("index"))
+
+@app.route('/', methods=['GET'])
+def index():
+    print("index visit")
+    return render_template("index.html")
+
 if __name__ == '__main__':
     init_db()
     app.run()

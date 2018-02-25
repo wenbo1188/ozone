@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block body %}
+	<div class="container">
+		<div class="row">
+			<div class="col-xs-8 col-xs-offset-2 col-lg-8 col-lg-offset-2">
+
+				<!-- login -->
+				<div class="panel panel-primary">
+					<div class="panel-body">
+						<form action="{{ url_for("login") }}" method="post">
+							<div class="form-group">
+								<label for="username">用户名</label>
+								<input type="text" class="form-control" id="username" name="username">
+							</div>
+							<div class="form-group">
+								<label for="password">密码</label>
+								<input type="text" class="form-control" id="password" name="password">
+							</div>
+							<button type="submit" class="btn btn-primary">登录</button>
+						</form>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+{% endblock %}
