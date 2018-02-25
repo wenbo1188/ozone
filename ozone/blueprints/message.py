@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, abort, g, request, redirect, url_for
+from flask import Blueprint, render_template, abort, g, request, redirect, url_for, session
 from flask import current_app as app
 from jinja2 import TemplateNotFound
 import sqlite3
@@ -22,10 +22,12 @@ def close_db():
 
 @message_page.route('/')
 def show_message():
+    if "logged_in" not in session:
+        return redirect(url_for("login"))
     with app.app_context():
         db = get_db()
         cur = db.cursor().execute("select timestamp, owner, content from message order by timestamp desc")
-        messages = [dict(timestamp=row[0], owner=row[1], content=row[2]) for row in cur.fetchall()]
+        messages = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], content=row[2]) for row in cur.fetchall()]
         print(messages)
         try:
             return render_template("show_message.html", messages=messages)

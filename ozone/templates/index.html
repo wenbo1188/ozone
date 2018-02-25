@@ -2,17 +2,22 @@
 {% block body %}
 	<div>
 		{% if session.logged_in %}
-			<h1>hello</h1>	
-		{% else %}
-			<div class="jumbotron">
-				<div class="container" align="center">
-				<h2 class="text-info" style="font-family:arial;font-weight:bold;font-size:49px">Ozone</h2>
-				<br>
-				<div class="text-muted">Our Zone</div>
-				<br>
-				<br>
-				<p><a role="button" href="/login" class="btn btn-success btn-lg">登录</a></p>
-			</div>
+			<ul class="nav nav-pills">
+				<li role="presentation"><a href="#">主页</a></li>
+				<li role="presentation"><a href="{{ url_for("message.show_message") }}">留言</a></li>
+				<li role="presentation"><a href="{{ url_for("logout") }}">注销</a></li>
+			</ul>
 		{% endif %}
+		<div class="jumbotron">
+			<div class="container" align="center">
+			<h2 class="text-info" style="font-family:arial;font-weight:bold;font-size:49px">Ozone</h2>
+			<br>
+			<div class="text-muted">Our Zone</div>
+			<br>
+			<br>
+			{% if not session.logged_in %}
+			<p><a role="button" href="/login" class="btn btn-success btn-lg">登录</a></p>
+			{% endif %}
+		</div>
 	</div>
 {% endblock %}
