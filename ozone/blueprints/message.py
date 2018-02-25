@@ -37,10 +37,24 @@ def show_message():
 
 @message_page.route('/add', methods=['POST'])
 def add_message():
+    owner = None
+
+    # check if log in
+    if "logged_in" not in session:
+        return redirect(url_for("login"))
+
+    # start add message
     with app.app_context():
         db = get_db()
         timestamp = int(time.time())
-        db.cursor().execute("insert into message (timestamp, owner, content) values (?, ?, ?)", [timestamp, request.form["owner"], request.form["content"]])
+        if session["logged_user"] == "wang":
+            owner = "汪先森"
+        elif session["logged_user"] == "miao":
+            owner = "小笨笨"
+        else:
+            print("Invalid username, something goes wrong!!!")
+
+        db.cursor().execute("insert into message (timestamp, owner, content) values (?, ?, ?)", [timestamp, owner, request.form["content"]])
         db.commit()
         try:
             return redirect(url_for("message.show_message"))

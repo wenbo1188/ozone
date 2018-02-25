@@ -34,10 +34,16 @@ def init_db():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        if request.form["username"] == app.config['USERNAME'] and request.form["password"] == app.config['PASSWORD']:
+        if request.form["username"] == app.config['USERNAME1'] and request.form["password"] == app.config['PASSWORD']:
             session["logged_in"] = True
-            print("you have logged in")
-            return redirect(url_for("message.show_message"))
+            session["logged_user"] = app.config['USERNAME1']
+        elif request.form["username"] == app.config['USERNAME2'] and request.form["password"] == app.config['PASSWORD']:
+            session["logged_in"] = True
+            session["logged_user"] = app.config['USERNAME2']
+        else:
+            return render_template("login.html")
+        print("%s have logged in" % request.form["username"])
+        return redirect(url_for("message.show_message"))
     return render_template("login.html")
 
 @app.route('/logout')
