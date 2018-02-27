@@ -27,9 +27,12 @@ def init_db():
     with app.app_context():
         db = get_db()
         with app.open_resource("schema.sql", mode='r') as f:
-            db.cursor().executescript(f.read())
-        db.commit()
-        print("success init db")
+            try:
+                db.cursor().executescript(f.read())
+                db.commit()
+                print("success init db")
+            except: 
+                print("fail to init db")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -49,7 +52,7 @@ def login():
 @app.route('/logout')
 def logout():
     session.pop("logged_in", None)
-    print("you have logged out")
+    print("%s have logged out" % session["logged_user"])
     return redirect(url_for("index"))
 
 @app.route('/', methods=['GET'])
