@@ -28,7 +28,7 @@ def show_message():
         db = get_db()
         cur = db.cursor().execute("select timestamp, owner, content from message order by timestamp desc")
         messages = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], content=row[2]) for row in cur.fetchall()]
-        print(messages)
+        # print(messages)
         try:
             return render_template("show_message.html", messages=messages)
         except TemplateNotFound:

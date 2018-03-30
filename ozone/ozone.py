@@ -30,7 +30,7 @@ def init_db():
             try:
                 db.cursor().executescript(f.read())
                 db.commit()
-                print("success init db")
+                # print("success init db")
             except: 
                 print("fail to init db")
 
@@ -45,19 +45,19 @@ def login():
             session["logged_user"] = app.config['USERNAME2']
         else:
             return render_template("login.html")
-        print("%s have logged in" % request.form["username"])
+        # print("%s have logged in" % request.form["username"])
         return redirect(url_for("message.show_message"))
     return render_template("login.html")
 
 @app.route('/logout')
 def logout():
     session.pop("logged_in", None)
-    print("%s have logged out" % session["logged_user"])
+    # print("%s have logged out" % session["logged_user"])
     return redirect(url_for("index"))
 
 @app.route('/', methods=['GET'])
 def index():
-    print("index visit")
+    # print("index visit")
     return render_template("index.html")
 
 if __name__ == '__main__':
