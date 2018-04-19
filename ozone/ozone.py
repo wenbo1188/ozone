@@ -8,6 +8,51 @@ app = Flask(__name__)
 app.config.from_object(ProdConfig)
 app.register_blueprint(message_page, url_prefix="/message")
 
+def get_playlist_info():
+    '''
+    get playlist info from file under folder: ../songs_rank/
+    '''
+
+    playlist1 = []
+    playlist2 = []
+
+    filepath1 = "../songs_rank/{}.txt".format(app.config["USERNAME1"])
+    filepath2 = "../songs_rank/{}.txt".format(app.config["USERNAME2"])
+
+    with open(filepath1, 'r') as file1:
+        try:
+            line = file1.readline()
+        except:
+            print("fail to read oneline")
+
+        while line:
+            line = line.strip('\n')
+            playlist1.append(line)
+            try:
+                line = file1.readline()
+            except:
+                print("fail to read oneline")
+
+    with open(filepath2, 'r') as file2:
+        try:
+            line = file2.readline()
+        except:
+            print("fail to read oneline")
+
+        while line:
+            line = line.strip('\n')
+            playlist2.append(line)
+            try:
+                line = file2.readline()
+            except:
+                print("fail to read oneline")
+
+    file1.close()
+    file2.close()
+
+    # print(playlist1, playlist2)
+    return playlist1, playlist2
+
 def connect_db():
     rv = sqlite3.connect(app.config['DATABASE'])
     rv.row_factory = sqlite3.Row
@@ -58,7 +103,8 @@ def logout():
 @app.route('/', methods=['GET'])
 def index():
     # print("index visit")
-    return render_template("index.html")
+    list1, list2 = get_playlist_info()
+    return render_template("index.html", playlist1=list1, playlist2=list2)
 
 if __name__ == '__main__':
     init_db()
