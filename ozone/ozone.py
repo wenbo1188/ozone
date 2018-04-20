@@ -1,5 +1,6 @@
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
 from message import message_page
+from column import column_page
 import sqlite3
 import os
 from config import ProdConfig
@@ -7,6 +8,7 @@ from config import ProdConfig
 app = Flask(__name__)
 app.config.from_object(ProdConfig)
 app.register_blueprint(message_page, url_prefix="/message")
+app.register_blueprint(column_page, url_prefix="/column")
 
 def get_playlist_info():
     '''
@@ -91,7 +93,7 @@ def login():
         else:
             return render_template("login.html")
         # print("%s have logged in" % request.form["username"])
-        return redirect(url_for("message.show_message"))
+        return redirect(url_for("index"))
     return render_template("login.html")
 
 @app.route('/logout')
