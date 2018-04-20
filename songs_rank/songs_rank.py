@@ -9,6 +9,7 @@ import urllib.parse as up
 import json
 import time
 from config import ProdConfig
+from music_util import Song
 
 url_base = "http://music.163.com/api/playlist/detail?id="
 REQ_TIMEOUT = 5
@@ -41,13 +42,15 @@ def get_songs_rank(user_id : str, name : str) -> None:
 
     tracks = json_data["result"]["tracks"]
     # print(tracks)
-    playlist = [item for item in [tracks[i]["name"] for i in range(TOP_NUM) if tracks[i]["name"] != None]]
+    song = Song()
+    playlist = [{"name":tracks[i]["name"], "id":tracks[i]["id"], "url":song.getUrlSong(tracks[i]["id"])} for i in range(TOP_NUM)]
     # print(playlist)
     
     with open(res_path, 'w+') as f:
-        f.write(str(len(playlist)) + '\n')
         for i in range(len(playlist)):
-            f.write(playlist[i] + '\n')
+            f.write(str(playlist[i]["name"]) + '\n')
+            f.write(str(playlist[i]["id"]) + '\n')
+            f.write(str(playlist[i]["url"]) + '\n')
     
     f.close()
 

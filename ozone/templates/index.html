@@ -49,9 +49,7 @@
 						<div class="panel-body">
 							<div class="list-group">
 								{% for song in playlist1 %}
-								{% if song != '5' %}
-								<li class="list-group-item">{{ song }}</li>
-								{% endif %}
+								<li class="list-group-item"><a href="http://music.163.com/outchain/player?type=2&id={{ song[1] }}&auto=1&height=66&bg=e8e8e8">{{ song[0] }}</a></li>
 								{% endfor %}
 							</div>
 						</div>
@@ -70,9 +68,7 @@
 						<div class="panel-body">
 							<div class="list-group">
 								{% for song in playlist2 %}
-								{% if song != '5' %}
-								<li class="list-group-item">{{ song }}</li>
-								{% endif %}
+								<li class="list-group-item"><a href="http://music.163.com/outchain/player?type=2&id={{ song[1] }}&auto=1&height=66&bg=e8e8e8">{{ song[0] }}</a></li>
 								{% endfor %}
 							</div>
 						</div>
