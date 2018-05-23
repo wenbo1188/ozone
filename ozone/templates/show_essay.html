@@ -74,7 +74,15 @@
 								</h1>
 							</div>
 							<div class="panel-body">
-								{{ essay.content }}
+								{% for para in essay.content %}
+								<div>
+									{% if para == "" %}
+										<br>
+									{% else %}
+										{{ para }}
+									{% endif %}
+								</div>
+								{% endfor %}
 							</div>
 							<div class="panel-footer text-right">
 								{{ essay.timestamp }} by {{ essay.owner }}
@@ -88,7 +96,15 @@
 								</h1>
 							</div>
 							<div class="panel-body">
-								{{ essay.content }}
+								{% for para in essay.content %}
+								<div>
+									{% if para == "" %}
+										<br>
+									{% else %}
+										{{ para }}
+									{% endif %}
+								</div>
+								{% endfor %}
 							</div>
 							<div class="panel-footer text-right">
 								{{ essay.timestamp }} by {{ essay.owner }}

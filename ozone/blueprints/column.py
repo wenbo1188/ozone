@@ -20,6 +20,9 @@ def close_db():
     if hasattr(g, 'sqlite3_db'):
         g.sqlite_db.close()
 
+def split_paragraph(text: str) -> list:
+    return text.split("\r\n")
+
 @column_page.route('/')
 def show_essay():
     if "logged_in" not in session:
@@ -27,8 +30,8 @@ def show_essay():
     with app.app_context():
         db = get_db()
         cur = db.cursor().execute("select timestamp, owner, title, content from essay order by timestamp desc")
-        essays = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=row[3]) for row in cur.fetchall()]
-        # print(messages)
+        essays = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=split_paragraph(row[3])) for row in cur.fetchall()]
+        # print(essays)
         try:
             return render_template("show_essay.html", essays=essays)
         except TemplateNotFound:
