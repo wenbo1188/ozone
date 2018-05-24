@@ -30,7 +30,7 @@ def show_essay():
     with app.app_context():
         db = get_db()
         cur = db.cursor().execute("select timestamp, owner, title, content from essay order by timestamp desc")
-        essays = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=split_paragraph(row[3])) for row in cur.fetchall()]
+        essays = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=split_paragraph(row[3]), collapse_id=row[0]) for row in cur.fetchall()]
         # print(essays)
         try:
             return render_template("show_essay.html", essays=essays)
