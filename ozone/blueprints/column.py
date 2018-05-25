@@ -32,11 +32,11 @@ def show_essay():
         cur = db.cursor().execute("select timestamp, owner, title, content from essay order by timestamp desc")
         essays = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=split_paragraph(row[3]), collapse_id=row[0]) for row in cur.fetchall()]
         # print(essays)
+        close_db()
         try:
             return render_template("show_essay.html", essays=essays)
         except TemplateNotFound:
             abort(404)
-        close_db()
 
 @column_page.route('/add', methods=['POST'])
 def add_essay():
@@ -61,9 +61,9 @@ def add_essay():
 
         db.cursor().execute("insert into essay (timestamp, owner, title, content, user1_read, user2_read) values (?, ?, ?, ?, 0, 0)", [timestamp, owner, request.form["title"], request.form["content"]])
         db.commit()
+        close_db()
         try:
             return redirect(url_for("column.show_essay"))
         except TemplateNotFound:
             abort(404)
-        close_db()
 
