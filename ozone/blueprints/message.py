@@ -26,7 +26,7 @@ def send_email_to_user(owner: str):
     mail = Mail(app)
 
     # user1
-    if (owner == app.config['USERNAME1_CN']):
+    if (owner == "汪先森"):
         receiver = app.config['USER2_MAILADDRESS']
     # user2
     else:
