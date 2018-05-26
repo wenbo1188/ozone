@@ -75,7 +75,13 @@ def add_message():
         db.cursor().execute("insert into message (timestamp, owner, content) values (?, ?, ?)", [timestamp, owner, request.form["content"]])
         db.commit()
         close_db()
-        send_email_to_user(owner)
+
+        # email reminder
+        try:
+            send_email_to_user(owner)
+        except:
+            print("Send email failure")
+
         try:
             return redirect(url_for("message.show_message"))
         except TemplateNotFound:

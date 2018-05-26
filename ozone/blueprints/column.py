@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, abort, g, request, redirect, url_for, session
 from flask import current_app as app
 from jinja2 import TemplateNotFound
+from flask_mail import Mail
+from flask_mail import Message as mail_message
 import sqlite3
 import time
 
@@ -22,6 +24,22 @@ def close_db():
 
 def split_paragraph(text: str) -> list:
     return text.split("\r\n")
+
+def send_email_to_user(owner: str):
+    mail = Mail(app)
+
+    #user1
+    if (owner == "汪先森"):
+        receiver = app.config['USER2_MAILADDRESS']
+    # user2
+    else:
+        receiver = app.config['USER1_MAILADDRESS']
+
+    sender = ('OZONE消息管家', app.config['MAIL_USERNAME'])
+    message_content = owner + "更新了专题，快去看看吧~"
+    message = mail_message(message_content, sender = sender, recipients=[receiver])
+    mail.send(message)
+    # print("send success")
 
 @column_page.route('/')
 def show_essay():
@@ -62,6 +80,13 @@ def add_essay():
         db.cursor().execute("insert into essay (timestamp, owner, title, content, user1_read, user2_read) values (?, ?, ?, ?, 0, 0)", [timestamp, owner, request.form["title"], request.form["content"]])
         db.commit()
         close_db()
+
+        # email reminder
+        try:
+            send_email_to_user(owner)
+        except:
+            print("Send email failure")
+
         try:
             return redirect(url_for("column.show_essay"))
         except TemplateNotFound:
