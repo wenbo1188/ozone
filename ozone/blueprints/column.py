@@ -5,6 +5,10 @@ from flask_mail import Mail
 from flask_mail import Message as mail_message
 import sqlite3
 import time
+import threading
+from email.mime.text import MIMEText
+from email.header import Header
+import smtplib
 
 column_page = Blueprint("column", __name__, template_folder="templates")
 
@@ -25,20 +29,43 @@ def close_db():
 def split_paragraph(text: str) -> list:
     return text.split("\r\n")
 
-def send_email_to_user(owner: str):
-    mail = Mail(app)
+def send_async_email(msg, mail_username, mail_password, mail_server, to_addr, debug = False):
+    server = smtplib.SMTP(mail_server, 25)
+    if (debug):
+        server.set_debuglevel(1)
 
+    try:
+        server.login(mail_username, mail_password)
+    except:
+        print("fail to login")
+
+    server.sendmail(mail_username, [to_addr], msg.as_string())
+    server.quit()
+
+def send_email_to_user(owner: str):
     #user1
     if (owner == "汪先森"):
         receiver = app.config['USER2_MAILADDRESS']
+        receiver_name = app.config['USERNAME2']
     # user2
     else:
         receiver = app.config['USER1_MAILADDRESS']
+        receiver_name = app.config['USERNAME1']
 
-    sender = ('OZONE消息管家', app.config['MAIL_USERNAME'])
-    message_content = owner + "更新了专题，快去看看吧~"
-    message = mail_message(message_content, sender = sender, recipients=[receiver])
-    mail.send(message)
+    mail_username = app.config['MAIL_USERNAME']
+    mail_password = app.config['MAIL_PASSWORD']
+    mail_server = app.config['MAIL_SERVER']
+
+    #message_content = owner + "更新了专题，快去看看吧~"
+    message_content = "An essay has been updated, go and have a look~"
+    message = MIMEText(message_content, 'text', 'utf-8')
+    message['Subject'] = Header("Ozone消息提醒", 'utf-8')
+    message['From'] = 'Ozone消息管家<13188316906@163.com>'
+    message['To'] = receiver_name + '<' + receiver + '>'
+
+    mail_thread = threading.Thread(target = send_async_email, args = [message, mail_username, mail_password, mail_server, receiver])
+    mail_thread.start()
+    #mail.send(message)
     # print("send success")
 
 @column_page.route('/')
@@ -87,8 +114,8 @@ def add_essay():
         except:
             print("Send email failure")
 
-        try:
-            return redirect(url_for("column.show_essay"))
-        except TemplateNotFound:
-            abort(404)
+    try:
+        return redirect(url_for("column.show_essay"))
+    except TemplateNotFound:
+        abort(404)
 
