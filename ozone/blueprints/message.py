@@ -26,8 +26,8 @@ def close_db():
     if hasattr(g, 'sqlite3_db'):
         g.sqlite_db.close()
 
-def send_async_email(msg, mail_username, mail_password, mail_server, to_addr, debug = False):
-    server = smtplib.SMTP(mail_server, 25)
+def send_async_email(msg, mail_username, mail_password, mail_server, to_addr, mail_port, debug = False):
+    server = smtplib.SMTP_SSL(mail_server, mail_port)
     if (debug):
         server.set_debuglevel(1)
 
@@ -52,6 +52,7 @@ def send_email_to_user(owner: str):
     mail_username = app.config['MAIL_USERNAME']
     mail_password = app.config['MAIL_PASSWORD']
     mail_server = app.config['MAIL_SERVER']
+    mail_port = app.config['MAIL_PORT']
 
     #message_content = owner + "更新了专题，快去看看吧~"
     message_content = "A new message for you, go and have a look~"
@@ -60,7 +61,7 @@ def send_email_to_user(owner: str):
     message['From'] = 'Ozone消息管家<13188316906@163.com>'
     message['To'] = receiver_name + '<' + receiver + '>'
 
-    mail_thread = threading.Thread(target = send_async_email, args = [message, mail_username, mail_password, mail_server, receiver])
+    mail_thread = threading.Thread(target = send_async_email, args = [message, mail_username, mail_password, mail_server, receiver, mail_port])
     mail_thread.start()
     #mail.send(message)
     # print("send success")
