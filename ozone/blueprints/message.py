@@ -1,8 +1,6 @@
 from flask import Blueprint, render_template, abort, g, request, redirect, url_for, session
 from flask import current_app as app
 from jinja2 import TemplateNotFound
-from flask_mail import Mail
-from flask_mail import Message as mail_message
 import sqlite3
 import time
 import threading

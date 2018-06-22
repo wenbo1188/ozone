@@ -78,15 +78,7 @@
 							</div>
 							<div id="{{ essay.collapse_id }}" class="panel-collapse collapse">
 								<div class="panel-body">
-									<div>
-									{% for para in essay.content %}
-										{% if para == "" %}
-											<br>
-										{% else %}
-											<p style="text-indent:2em">{{ para }}</p>
-										{% endif %}
-									{% endfor %}
-									</div>
+									{{ essay.content|safe|my_str_filter }}
 								</div>
 							</div>
 							<div class="panel-footer text-right">
@@ -105,15 +97,7 @@
 							</div>
 							<div id="{{ essay.collapse_id }}" class="panel-collapse collapse">
 								<div class="panel-body">
-									<div>
-									{% for para in essay.content %}
-										{% if para == "" %}
-											<br>
-										{% else %}
-											<p style="text-indent:2em">{{ para }}</p>
-										{% endif %}
-									{% endfor %}
-									</div>
+									{{ essay.content|safe|my_str_filter }}
 								</div>
 							</div>
 							<div class="panel-footer text-right">

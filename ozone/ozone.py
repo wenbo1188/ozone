@@ -10,6 +10,21 @@ app.config.from_object(ProdConfig)
 app.register_blueprint(message_page, url_prefix="/message")
 app.register_blueprint(column_page, url_prefix="/column")
 
+def danger_str_filter(string_to_filter : str):
+    '''filter to skip dangerous html tag'''
+
+    danger_list = ["<script>", "</script>", "<body>", "</body>"]
+    for danger_str in danger_list:
+        string_to_filter = string_to_filter.replace(danger_str, "")
+
+    return string_to_filter
+
+def register_filter():
+    '''register the filter to skip dangerous html tag'''
+
+    env = app.jinja_env
+    env.filters['my_str_filter'] = danger_str_filter
+
 def get_playlist_info():
     '''
     get playlist info from file under folder: ../songs_rank/
@@ -108,6 +123,9 @@ def index():
     list1, list2 = get_playlist_info()
     return render_template("index.html", playlist1=list1, playlist2=list2)
 
+register_filter()
+
 if __name__ == '__main__':
     init_db()
+    register_filter()
     app.run(host="0.0.0.0")

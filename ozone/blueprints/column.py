@@ -1,8 +1,6 @@
 from flask import Blueprint, render_template, abort, g, request, redirect, url_for, session
 from flask import current_app as app
 from jinja2 import TemplateNotFound
-from flask_mail import Mail
-from flask_mail import Message as mail_message
 import sqlite3
 import time
 import threading
@@ -25,9 +23,6 @@ def get_db():
 def close_db():
     if hasattr(g, 'sqlite3_db'):
         g.sqlite_db.close()
-
-def split_paragraph(text: str) -> list:
-    return text.split("\r\n")
 
 def send_async_email(msg, mail_username, mail_password, mail_server, to_addr, mail_port, debug = False):
     server = smtplib.SMTP_SSL(mail_server, mail_port)
@@ -76,7 +71,7 @@ def show_essay():
     with app.app_context():
         db = get_db()
         cur = db.cursor().execute("select timestamp, owner, title, content from essay order by timestamp desc")
-        essays = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=split_paragraph(row[3]), collapse_id=row[0]) for row in cur.fetchall()]
+        essays = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=row[3], collapse_id=row[0]) for row in cur.fetchall()]
         # print(essays)
         close_db()
         try:

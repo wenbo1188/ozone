@@ -41,14 +41,14 @@
 						<div class="panel panel-info">
 							<div class="panel-heading">{{ message.owner }}({{ message.timestamp }})</div>
 							<div class="panel-body">
-								{{ message.content }}
+								{{ message.content|safe|my_str_filter }}
 							</div>
 						</div>
 						{% elif message.owner == "小笨笨" %}
 						<div class="panel panel-danger">
 							<div class="panel-heading">{{ message.owner }}({{ message.timestamp }})</div>
 							<div class="panel-body">
-								{{ message.content }}
+								{{ message.content|safe|my_str_filter }}
 							</div>
 						</div>
 						{% endif %}
