@@ -69,7 +69,7 @@ def get_songs_rank(user_id : str, name : str) -> None:
 
     tracks = json_data["result"]["tracks"]
     # print(tracks)
-    if (songs_change(tracks, res_path) or 1):
+    if (songs_change(tracks, res_path)):
         print("songs change")
 
         song = Song()
