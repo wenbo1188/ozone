@@ -8,7 +8,7 @@ from email.mime.text import MIMEText
 from email.header import Header
 import smtplib
 
-message_page = Blueprint("message", __name__, template_folder="templates")
+column_page = Blueprint("column", __name__, template_folder="templates")
 
 def connect_db():
     rv = sqlite3.connect(app.config['DATABASE'])
@@ -53,7 +53,7 @@ def send_email_to_user(owner: str):
     mail_port = app.config['MAIL_PORT']
 
     #message_content = owner + "更新了专题，快去看看吧~"
-    message_content = "A new message for you, go and have a look~"
+    message_content = "An essay has been updated, go and have a look~"
     message = MIMEText(message_content, 'text', 'utf-8')
     message['Subject'] = Header("Ozone消息提醒", 'utf-8')
     message['From'] = 'Ozone消息管家<13188316906@163.com>'
@@ -64,23 +64,23 @@ def send_email_to_user(owner: str):
     #mail.send(message)
     # print("send success")
 
-@message_page.route('/')
-def show_message():
+@column_page.route('/')
+def show_essay():
     if "logged_in" not in session:
         return redirect(url_for("login"))
     with app.app_context():
         db = get_db()
-        cur = db.cursor().execute("select timestamp, owner, content from message order by timestamp desc")
-        messages = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], content=row[2]) for row in cur.fetchall()]
-        # print(messages)
+        cur = db.cursor().execute("select timestamp, owner, title, content from essay order by timestamp desc")
+        essays = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=row[3], collapse_id=row[0]) for row in cur.fetchall()]
+        # print(essays)
         close_db()
         try:
-            return render_template("show_message.html", messages=messages)
+            return render_template("show_essay.html", essays=essays)
         except TemplateNotFound:
             abort(404)
 
-@message_page.route('/add', methods=['POST'])
-def add_message():
+@column_page.route('/add', methods=['POST'])
+def add_essay():
     owner = None
 
     # check if log in
@@ -98,7 +98,9 @@ def add_message():
         else:
             print("Invalid username, something goes wrong!!!")
 
-        db.cursor().execute("insert into message (timestamp, owner, content) values (?, ?, ?)", [timestamp, owner, request.form["content"]])
+        print(request.form["title"], request.form["content"])
+
+        db.cursor().execute("insert into essay (timestamp, owner, title, content, user1_read, user2_read) values (?, ?, ?, ?, 0, 0)", [timestamp, owner, request.form["title"], request.form["content"]])
         db.commit()
         close_db()
 
@@ -108,8 +110,8 @@ def add_message():
         except:
             print("Send email failure")
 
-        try:
-            return redirect(url_for("message.show_message"))
-        except TemplateNotFound:
-            abort(404)
+    try:
+        return redirect(url_for("column.show_essay"))
+    except TemplateNotFound:
+        abort(404)
 
