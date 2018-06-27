@@ -76,7 +76,7 @@ def get_songs_rank(user_id : str, name : str) -> None:
         playlist = [{"name":tracks[i]["name"], "id":tracks[i]["id"], "url":song.getUrlSong(tracks[i]["id"])} for i in range(TOP_NUM)]
         # print(playlist)
 
-        # Download the song and convert MP3 to WAV
+        # Download the song and convert MP3 to OGG
         for i in range(len(playlist)):
             download_command = "wget -nc -O ../ozone/static/songs/{}.mp3 {}".format(playlist[i]["id"], playlist[i]["url"])
             err_code = os.system(download_command)
@@ -85,10 +85,10 @@ def get_songs_rank(user_id : str, name : str) -> None:
             else:
                 print("success download")
             
-            convert_command = "mpg123 -w ../ozone/static/songs/{}.wav ../ozone/static/songs/{}.mp3".format(playlist[i]["id"], playlist[i]["id"])
+            convert_command = "ffmpeg -i ../ozone/static/songs/{}.mp3 -c:a libvorbis -n ../ozone/static/songs/{}.ogg 1>/dev/null 2>&1".format(playlist[i]["id"], playlist[i]["id"])
             err_code = os.system(convert_command)
             if (err_code != 0):
-                print("fail to convert mp3 to wav")
+                print("fail to convert mp3 to ogg")
             else:
                 print("success convert")
 
