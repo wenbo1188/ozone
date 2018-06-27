@@ -25,7 +25,7 @@ def register_filter():
     env = app.jinja_env
     env.filters['my_str_filter'] = danger_str_filter
 
-def get_playlist_info():
+def get_playlist_info() -> tuple:
     '''
     get playlist info from file under folder: ../songs_rank/
     '''
@@ -43,8 +43,22 @@ def get_playlist_info():
             print("fail to read oneline")
 
         while line:
-            line = line.strip('\n')
-            playlist1.append(line)
+            name = line.strip('\n')
+            song = []
+            song.append(name)
+            try:
+                line = file1.readline()
+            except:
+                print("fail to read oneline")
+            id = line.strip('\n')
+            song.append(id) 
+            try:
+                line = file1.readline()
+            except:
+                print("fail to read oneline")
+            url = line.strip('\n')
+            song.append(url)
+            playlist1.append(song)
             try:
                 line = file1.readline()
             except:
@@ -57,8 +71,22 @@ def get_playlist_info():
             print("fail to read oneline")
 
         while line:
-            line = line.strip('\n')
-            playlist2.append(line)
+            name = line.strip('\n')
+            song = []
+            song.append(name)
+            try:
+                line = file2.readline()
+            except:
+                print("fail to read oneline")
+            id = line.strip('\n')
+            song.append(id)
+            try:
+                line = file2.readline()
+            except:
+                print("fail to read oneline")
+            url = line.strip('\n')
+            song.append(url)
+            playlist2.append(song)
             try:
                 line = file2.readline()
             except:
