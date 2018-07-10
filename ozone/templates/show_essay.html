@@ -16,7 +16,7 @@
 					<ul class="nav navbar-nav">
 						<li role="presentation"><a href="{{ url_for("index") }}">主页</a></li>
 						<li role="presentation"><a href="{{ url_for("message.show_message", page=1) }}">留言</a></li>
-						<li role="presentation" class="active"><a href="{{ url_for("column.show_essay", page=1) }}">专栏</a></li>
+						<li role="presentation" class="active"><a href="{{ url_for("column.show_essay", title="all", page=1) }}">专栏</a></li>
 					</ul>
 					<ul class="nav navbar-nav navbar-right">
 						<li role="presentation"><a href="{{ url_for("logout") }}"><span class="glyphicon glyphicon-log-out"></span>注销</a></li>
@@ -24,9 +24,9 @@
 				</div>
 			</div>
 		</nav>
-		<div class="container">
+		<div class="container-fluid">
 			<div class="row">
-				<div class="col-xs-10 col-xs-offset-1 col-lg-10 col-lg-offset-1" style="background: #FFE4E1">
+				<div class="col-xs-10 col-xs-offset-1 col-lg-6 col-lg-offset-3" style="background: #FFE4E1;border-bottom-left-radius: 3px;border-bottom-right-radius: 3px;">
 					<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#writeModal">
 						新建专栏
 					</button>
@@ -112,16 +112,30 @@
 					<!--pagination-->
 					<div align="center">
 						<ul class="pagination pagination-lg">
-							<li><a href="{{ url_for('column.show_essay', page=current_page-1) }}">&laquo;</a></li>
+							<li><a href="{{ url_for('column.show_essay', title=current_title, page=current_page-1) }}">&laquo;</a></li>
 							{% for page in range(1, total_page + 1) %}
 							{% if current_page == page %}
-								<li class="active"><a href="{{ url_for('column.show_essay', page=page) }}">{{ page }}</a></li>
+								<li class="active"><a href="{{ url_for('column.show_essay', title=current_title, page=page) }}">{{ page }}</a></li>
 							{% else %}
-								<li><a href="{{ url_for('column.show_essay', page=page) }}">{{ page }}</a></li>
+								<li><a href="{{ url_for('column.show_essay', title=current_title, page=page) }}">{{ page }}</a></li>
 							{% endif %}
 							{% endfor %}
-							<li><a href="{{ url_for('column.show_essay', page=current_page+1) }}">&raquo;</a></li>
+							<li><a href="{{ url_for('column.show_essay', title=current_title, page=current_page+1) }}">&raquo;</a></li>
 						</ul>
+					</div>
+				</div>
+				<div class="col-xs-10 col-xs-offset-1 col-lg-2" style="margin-top: 20px;">
+					<div class="panel panel-danger">
+						<div class="panel-heading">
+							<h3>我们的足迹</h3>
+						</div>
+						<div class="panel-body">
+							<div class="list-group">
+								{% for t in titles %}
+									<li class="list-group-item"><a href="{{ url_for('column.show_essay', title=t, page=1) }}">{{ t }}</a></li>
+								{% endfor %}
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>

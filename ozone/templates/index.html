@@ -17,7 +17,7 @@
 					<ul class="nav navbar-nav">
 						<li role="presentation"><a href="{{ url_for("index") }}">主页</a></li>
 						<li role="presentation"><a href="{{ url_for("message.show_message", page=1) }}">留言</a></li>
-						<li role="presentation"><a href="{{ url_for("column.show_essay", page=1) }}">专栏</a></li>
+						<li role="presentation"><a href="{{ url_for("column.show_essay", title="all", page=1) }}">专栏</a></li>
 					</ul>
 					<ul class="nav navbar-nav navbar-right">
 						<li role="presentation"><a href="{{ url_for("logout") }}"><span class="glyphicon glyphicon-log-out"></span>注销</a></li>   </ul>
