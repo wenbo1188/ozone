@@ -21,18 +21,38 @@ def close_db():
     if hasattr(g, 'sqlite3_db'):
         g.sqlite_db.close()
 
-@column_page.route('/')
-def show_essay():
+@column_page.route('/<int:page>')
+def show_essay(page=1):
     if "logged_in" not in session:
         return redirect(url_for("login"))
+
     with app.app_context():
         db = get_db()
-        cur = db.cursor().execute("select timestamp, owner, title, content from essay order by timestamp desc")
+        num_per_page = app.config['COLUMN_PER_PAGE']
+
+        # get total num of essays
+        cur = db.cursor().execute("select count(*) from essay")
+        num = cur.fetchall()[0][0]
+        if (num % num_per_page == 0):
+            max_page = int(num / num_per_page)
+        else:
+            max_page = int((num / num_per_page) + 1)
+        # print(num, max_page)
+
+        if ((page - 1) * num_per_page >= num):
+            print("Illegal page number")
+            page = max_page
+
+        if (page <= 0):
+            print("Illegal page number")
+            page = 1
+
+        cur = db.cursor().execute("select timestamp, owner, title, content from essay order by timestamp desc limit ? offset ?", [num_per_page, (page - 1) * num_per_page])
         essays = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=row[3], collapse_id=row[0]) for row in cur.fetchall()]
         # print(essays)
         close_db()
         try:
-            return render_template("show_essay.html", essays=essays)
+            return render_template("show_essay.html", essays=essays, total_page=max_page, current_page=page)
         except TemplateNotFound:
             abort(404)
 

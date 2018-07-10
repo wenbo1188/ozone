@@ -15,8 +15,8 @@
 				<div class="collapse navbar-collapse" id="example-navbar-collapse">
 					<ul class="nav navbar-nav">
 						<li role="presentation"><a href="{{ url_for("index") }}">主页</a></li>
-						<li role="presentation" class="active"><a href="{{ url_for("message.show_message") }}">留言</a></li>
-						<li role="presentation"><a href="{{ url_for("column.show_essay") }}">专栏</a></li>
+						<li role="presentation" class="active"><a href="{{ url_for("message.show_message", page=1) }}">留言</a></li>
+						<li role="presentation"><a href="{{ url_for("column.show_essay", page=1) }}">专栏</a></li>
 					</ul>
 					<ul class="nav navbar-nav navbar-right">
 						<li role="presentation"><a href="{{ url_for("logout") }}"><span class="glyphicon glyphicon-log-out"></span>注销</a></li>
@@ -55,6 +55,21 @@
 					{% else %}
 						<li><em>No messages</em>
 					{% endfor %}
+
+					<!--pagination-->
+					<div align="center">
+						<ul class="pagination pagination-lg">
+							<li><a href="{{ url_for('message.show_message', page=current_page-1) }}">&laquo;</a></li>
+							{% for page in range(1, total_page + 1) %}
+							{% if current_page == page %}
+								<li class="active"><a href="{{ url_for('message.show_message', page=page) }}">{{ page }}</a></li>
+							{% else %}
+								<li><a href="{{ url_for('message.show_message', page=page) }}">{{ page }}</a></li>
+							{% endif %}
+							{% endfor %}
+							<li><a href="{{ url_for('message.show_message', page=current_page+1) }}">&raquo;</a></li>
+						</ul>
+					</div>
 				</div>
 			</div>
 		</div>

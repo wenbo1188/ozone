@@ -21,18 +21,38 @@ def close_db():
     if hasattr(g, 'sqlite3_db'):
         g.sqlite_db.close()
 
-@message_page.route('/')
-def show_message():
+@message_page.route('/<int:page>')
+def show_message(page=1):
     if "logged_in" not in session:
         return redirect(url_for("login"))
+
     with app.app_context():
         db = get_db()
-        cur = db.cursor().execute("select timestamp, owner, content from message order by timestamp desc")
+        num_per_page = app.config['MESSAGE_PER_PAGE']
+
+        # get total num of messages
+        cur = db.cursor().execute("select count(*) from message")
+        num = cur.fetchall()[0][0]
+        if (num % num_per_page == 0):
+            max_page = int(num / num_per_page)
+        else:
+            max_page = int((num / num_per_page) + 1)
+        # print(num, max_page)
+        
+        if ((page - 1) * num_per_page >= num):
+            print("Illegal page number")
+            page = max_page
+
+        if (page <= 0):
+            print("Illegal page number")
+            page = 1
+
+        cur = db.cursor().execute("select timestamp, owner, content from message order by timestamp desc limit ? offset ?", [num_per_page, (page - 1) * num_per_page])
         messages = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], content=row[2]) for row in cur.fetchall()]
         # print(messages)
         close_db()
         try:
-            return render_template("show_message.html", messages=messages)
+            return render_template("show_message.html", messages=messages, total_page=max_page, current_page=page)
         except TemplateNotFound:
             abort(404)
 
