@@ -4,10 +4,13 @@ from jinja2 import TemplateNotFound
 import sqlite3
 import time
 from reminder_util import EmailReminder 
+from config import logger
 
 column_page = Blueprint("column", __name__, template_folder="templates")
 
 def connect_db():
+    logger.info("Connect to database...")
+
     rv = sqlite3.connect(app.config['DATABASE'])
     rv.row_factory = sqlite3.Row
     return rv
@@ -19,6 +22,7 @@ def get_db():
 
 def close_db():
     if hasattr(g, 'sqlite3_db'):
+        logger.info("Closing database...")
         g.sqlite_db.close()
 
 @column_page.route('/<title>/<int:page>')
@@ -32,10 +36,11 @@ def show_essay(title, page=1):
         # get all the titles
         cur = db.cursor().execute("select distinct title from essay order by timestamp desc")
         titles = [row[0] for row in cur.fetchall()]
-        # print(titles)
+        logger.debug("All the titles:\n{}".format(titles))
 
         if (title == "all"):
-            print("title is all")
+            logger.debug("Title is all")
+
             # get total num of essays
             cur = db.cursor().execute("select count(*) from essay")
             num = cur.fetchall()[0][0]
@@ -43,44 +48,45 @@ def show_essay(title, page=1):
                 max_page = int(num / num_per_page)
             else:
                 max_page = int((num / num_per_page) + 1)
-            # print(num, max_page)
+            logger.debug("Total num of message is {}, max_page is {}".format(num, max_page))
 
             if ((page - 1) * num_per_page >= num):
-                print("Illegal page number")
+                logger.warning("Illegal page number: {}".format(page))
                 page = max_page
 
             if (page <= 0):
-                print("Illegal page number")
+                logger.warning("Illegal page number: {}".format(page))
                 page = 1
 
             cur = db.cursor().execute("select timestamp, owner, title, content from essay order by timestamp desc limit ? offset ?", [num_per_page, (page - 1) * num_per_page])
             essays = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=row[3], collapse_id=row[0]) for row in cur.fetchall()]
-            # print(essays)
+            logger.debug("Essays:\n{}".format(essays))
         else:
-            # print(title)
+            logger.debug("Title is {}".format(title))
             cur = db.cursor().execute("select count(*) from essay where title = ?", [title])
             num = cur.fetchall()[0][0]
             if (num % num_per_page == 0):
                 max_page = int(num / num_per_page)
             else:
                 max_page = int((num / num_per_page) + 1)
-            # print(num, max_page)
+            logger.debug("Total num of message is {}, max_page is {}".format(num, max_page))
 
             if ((page - 1) * num_per_page >= num):
-                print("Illegal page number")
+                logger.warning("Illegal page number: {}".format(page))
                 page = max_page
 
             if (page <= 0):
-                print("Illegal page number")
+                logger.warning("Illegal page number: {}".format(page))
                 page = 1
 
             cur = db.cursor().execute("select timestamp, owner, title, content from essay where essay.title = ? order by timestamp desc limit ? offset ?", [title, num_per_page, (page - 1) * num_per_page])
             essays = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=row[3], collapse_id=row[0]) for row in cur.fetchall()]
-            # print(essays)
+            logger.debug("Essays:\n{}".format(essays))
         close_db()
         try:
             return render_template("show_essay.html", essays=essays, total_page=max_page, current_page=page, titles=titles, current_title=title)
         except TemplateNotFound:
+            logger.error("Template not found")
             abort(404)
 
 @column_page.route('/add', methods=['POST'])
@@ -100,9 +106,9 @@ def add_essay():
         elif session["logged_user"] == "miao":
             owner = "小笨笨"
         else:
-            print("Invalid username, something goes wrong!!!")
+            logger.error("Invalid username, something goes wrong!!!")
 
-        print(request.form["title"], request.form["content"])
+        logger.debug("Added title is:\n{}\nContent is:\n{}".format(request.form["title"], request.form["content"]))
 
         db.cursor().execute("insert into essay (timestamp, owner, title, content, user1_read, user2_read) values (?, ?, ?, ?, 0, 0)", [timestamp, owner, request.form["title"], request.form["content"]])
         db.commit()
@@ -116,17 +122,18 @@ def add_essay():
             receiver = app.config['USER1_MAILADDRESS']
             receiver_name = app.config['USERNAME1']
         else:
-            print("Invalid username, something goes wrong!!!")
+            logger.error("Invalid username, something goes wrong!!!")
         message_content = "An essay has been updated, go and have a look~"
 
         reminder = EmailReminder(app.config['MAIL_SERVER'], app.config['MAIL_PORT'], app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'], False)
         try:
             reminder.send(receiver, receiver_name, message_content)
         except:
-            print("Send email failure")
+            logger.warning("Send email failure")
 
     try:
         return redirect(url_for("column.show_essay"))
     except TemplateNotFound:
+        logger.error("Template not found")
         abort(404)
 

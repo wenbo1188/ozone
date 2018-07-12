@@ -4,10 +4,13 @@ from jinja2 import TemplateNotFound
 import sqlite3
 import time
 from reminder_util import EmailReminder
+from config import logger
 
 message_page = Blueprint("message", __name__, template_folder="templates")
 
 def connect_db():
+    logger.info("Connect to database...")
+
     rv = sqlite3.connect(app.config['DATABASE'])
     rv.row_factory = sqlite3.Row
     return rv
@@ -19,6 +22,7 @@ def get_db():
 
 def close_db():
     if hasattr(g, 'sqlite3_db'):
+        logger.info("Closing database...")
         g.sqlite_db.close()
 
 @message_page.route('/<int:page>')
@@ -37,23 +41,25 @@ def show_message(page=1):
             max_page = int(num / num_per_page)
         else:
             max_page = int((num / num_per_page) + 1)
-        # print(num, max_page)
+
+        logger.debug("Total num of message is {}, max_page is {}".format(num, max_page))
         
         if ((page - 1) * num_per_page >= num):
-            print("Illegal page number")
+            logger.warning("Illegal page number: {}".format(page))
             page = max_page
 
         if (page <= 0):
-            print("Illegal page number")
+            logger.warning("Illegal page number: {}".format(page))
             page = 1
 
         cur = db.cursor().execute("select timestamp, owner, content from message order by timestamp desc limit ? offset ?", [num_per_page, (page - 1) * num_per_page])
         messages = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], content=row[2]) for row in cur.fetchall()]
-        # print(messages)
+        logger.debug("Messages are:\n{}".format(messages))
         close_db()
         try:
             return render_template("show_message.html", messages=messages, total_page=max_page, current_page=page)
         except TemplateNotFound:
+            logger.error("Template not found")
             abort(404)
 
 @message_page.route('/add', methods=['POST'])
@@ -73,7 +79,7 @@ def add_message():
         elif session["logged_user"] == "miao":
             owner = "小笨笨"
         else:
-            print("Invalid username, something goes wrong!!!")
+            logger.error("Invalid username, something goes wrong!!!")
 
         db.cursor().execute("insert into message (timestamp, owner, content) values (?, ?, ?)", [timestamp, owner, request.form["content"]])
         db.commit()
@@ -87,17 +93,17 @@ def add_message():
             receiver = app.config['USER1_MAILADDRESS']
             receiver_name = app.config['USERNAME1']
         else:
-            print("Invalid username, something goes wrong!!!")
-        message_content = "A new message for you, go and have a look~"
+            logger.error("Invalid username, something goes wrong!!!")
 
+        message_content = "A new message for you, go and have a look~"
         reminder = EmailReminder(app.config['MAIL_SERVER'], app.config['MAIL_PORT'], app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'], False)
         try:
             reminder.send(receiver, receiver_name, message_content)
         except:
-            print("Send email failure")
+            logger.warning("Send email failure")
 
         try:
             return redirect(url_for("message.show_message"))
         except TemplateNotFound:
+            logger.error("Template not found")
             abort(404)
-

@@ -15,7 +15,7 @@ import os
 url_base = "http://music.163.com/api/playlist/detail?id="
 REQ_TIMEOUT = 5
 TOP_NUM = 5
-QUERY_INTERNAL = 3600 * 6 # 6h
+QUERY_INTERVAL = 3600 * 6 # 6h
 
 def songs_change(tracks : dict, res_path : str) -> bool:
     num_of_line = 0
@@ -110,7 +110,7 @@ def query_loop() -> None:
     while (1):
         get_songs_rank(ProdConfig.USER1_PLAYLIST_ID, ProdConfig.USERNAME1)
         get_songs_rank(ProdConfig.USER2_PLAYLIST_ID, ProdConfig.USERNAME2)
-        time.sleep(QUERY_INTERNAL)
+        time.sleep(QUERY_INTERVAL)
 
 if __name__ == '__main__':
     query_loop()
