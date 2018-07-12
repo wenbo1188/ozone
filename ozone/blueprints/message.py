@@ -103,7 +103,7 @@ def add_message():
             logger.warning("Send email failure")
 
         try:
-            return redirect(url_for("message.show_message"))
+            return redirect(url_for("message.show_message", page=1))
         except TemplateNotFound:
             logger.error("Template not found")
             abort(404)

@@ -132,7 +132,7 @@ def add_essay():
             logger.warning("Send email failure")
 
     try:
-        return redirect(url_for("column.show_essay"))
+        return redirect(url_for("column.show_essay", title="all", page=1))
     except TemplateNotFound:
         logger.error("Template not found")
         abort(404)
