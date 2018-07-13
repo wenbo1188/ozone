@@ -1,33 +1,8 @@
-from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
-from message import message_page
-from column import column_page
-import sqlite3
-import os
-from config import ProdConfig
+from flask import render_template, request, session, redirect, url_for, abort
+from flask import current_app as app
+from jinja2 import TemplateNotFound
 from config import logger
-
-# Initializing app
-app = Flask(__name__)
-app.config.from_object(ProdConfig)
-app.register_blueprint(message_page, url_prefix="/message")
-app.register_blueprint(column_page, url_prefix="/column")
-
-def danger_str_filter(string_to_filter : str):
-    '''filter to skip dangerous html tag'''
-
-    danger_list = ["<script>", "</script>", "<body>", "</body>"]
-    for danger_str in danger_list:
-        string_to_filter = string_to_filter.replace(danger_str, "")
-
-    return string_to_filter
-
-def register_filter():
-    '''register the filter to skip dangerous html tag'''
-
-    logger.info("Registering filter")
-
-    env = app.jinja_env
-    env.filters['my_str_filter'] = danger_str_filter
+from . import main_page
 
 def get_playlist_info() -> tuple:
     '''
@@ -39,8 +14,8 @@ def get_playlist_info() -> tuple:
     playlist1 = []
     playlist2 = []
 
-    filepath1 = "../songs_rank/{}.txt".format(app.config["USERNAME1"])
-    filepath2 = "../songs_rank/{}.txt".format(app.config["USERNAME2"])
+    filepath1 = "{}/{}.txt".format(app.config["PLAYLIST_PATH"], app.config["USERNAME1"])
+    filepath2 = "{}/{}.txt".format(app.config["PLAYLIST_PATH"], app.config["USERNAME2"])
 
     with open(filepath1, 'r') as file1:
         try:
@@ -105,38 +80,7 @@ def get_playlist_info() -> tuple:
 
     return playlist1, playlist2
 
-def connect_db():
-    logger.info("Connect to database...")
-    
-    rv = sqlite3.connect(app.config['DATABASE'])
-    rv.row_factory = sqlite3.Row
-    return rv
-
-def get_db():
-    if not hasattr(g, 'sqlite_db'):
-        g.sqlite_db = connect_db()
-    return g.sqlite_db
-
-@app.teardown_appcontext
-def close_db(error):
-    if hasattr(g, 'sqlite_db'):
-        logger.info("Closing database...")
-        g.sqlite_db.close()
-
-def init_db():
-    logger.info("Initializing database...")
-
-    with app.app_context():
-        db = get_db()
-        with app.open_resource("schema.sql", mode='r') as f:
-            try:
-                db.cursor().executescript(f.read())
-                db.commit()
-                logger.info("Success to init db")
-            except:
-                logger.error("Fail to init db")
-
-@app.route('/login', methods=['GET', 'POST'])
+@main_page.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         if request.form["username"] == app.config['USERNAME1'] and request.form["password"] == app.config['PASSWORD']:
@@ -152,29 +96,22 @@ def login():
         else:
             logger.warning("Wrong username or password: {}, {}".format(request.form["username"], request.form["password"]))
             return render_template("login.html")
-        return redirect(url_for("index"))
+        return redirect(url_for("main.index"))
     return render_template("login.html")
 
-@app.route('/logout')
+@main_page.route('/logout')
 def logout():
     logger.info("{} has logged out".format(session["logged_user"]))
 
     session.pop("logged_in", None)
-    return redirect(url_for("index"))
+    return redirect(url_for("main.index"))
 
-@app.route('/', methods=['GET'])
+@main_page.route('/', methods=['GET'])
 def index():
     logger.info("Index.html visited")
 
     if "logged_in" in session and session["logged_in"] == True:
-        list1, list2 = get_playlist_info()
+        list1, list2 = get_playlist_info() #to be removed
         return render_template("index.html", playlist1=list1, playlist2=list2)
     else:
         return render_template("index.html")
-
-register_filter()
-
-if __name__ == '__main__':
-    init_db()
-    register_filter()
-    app.run(host="0.0.0.0")

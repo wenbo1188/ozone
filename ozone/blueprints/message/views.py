@@ -1,12 +1,11 @@
-from flask import Blueprint, render_template, abort, g, request, redirect, url_for, session
+from flask import render_template, request, g, session, redirect, url_for, abort
 from flask import current_app as app
 from jinja2 import TemplateNotFound
 import sqlite3
 import time
 from reminder_util import EmailReminder
 from config import logger
-
-message_page = Blueprint("message", __name__, template_folder="templates")
+from . import message_page
 
 def connect_db():
     logger.info("Connect to database...")
@@ -20,15 +19,10 @@ def get_db():
         g.sqlite_db = connect_db()
     return g.sqlite_db
 
-def close_db():
-    if hasattr(g, 'sqlite3_db'):
-        logger.info("Closing database...")
-        g.sqlite_db.close()
-
 @message_page.route('/<int:page>')
 def show_message(page=1):
     if "logged_in" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("main.login"))
 
     with app.app_context():
         db = get_db()
@@ -55,7 +49,6 @@ def show_message(page=1):
         cur = db.cursor().execute("select timestamp, owner, content from message order by timestamp desc limit ? offset ?", [num_per_page, (page - 1) * num_per_page])
         messages = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], content=row[2]) for row in cur.fetchall()]
         logger.debug("Messages are:\n{}".format(messages))
-        close_db()
         try:
             return render_template("show_message.html", messages=messages, total_page=max_page, current_page=page)
         except TemplateNotFound:
@@ -68,7 +61,7 @@ def add_message():
 
     # check if log in
     if "logged_in" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("main.login"))
 
     # start add message
     with app.app_context():
@@ -83,7 +76,6 @@ def add_message():
 
         db.cursor().execute("insert into message (timestamp, owner, content) values (?, ?, ?)", [timestamp, owner, request.form["content"]])
         db.commit()
-        close_db()
 
         # email reminder
         if (owner == "汪先森"):

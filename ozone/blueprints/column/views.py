@@ -5,8 +5,7 @@ import sqlite3
 import time
 from reminder_util import EmailReminder 
 from config import logger
-
-column_page = Blueprint("column", __name__, template_folder="templates")
+from . import column_page
 
 def connect_db():
     logger.info("Connect to database...")
@@ -20,15 +19,10 @@ def get_db():
         g.sqlite_db = connect_db()
     return g.sqlite_db
 
-def close_db():
-    if hasattr(g, 'sqlite3_db'):
-        logger.info("Closing database...")
-        g.sqlite_db.close()
-
 @column_page.route('/<title>/<int:page>')
 def show_essay(title, page=1):
     if "logged_in" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("main.login"))
 
     with app.app_context():
         db = get_db()
@@ -82,7 +76,6 @@ def show_essay(title, page=1):
             cur = db.cursor().execute("select timestamp, owner, title, content from essay where essay.title = ? order by timestamp desc limit ? offset ?", [title, num_per_page, (page - 1) * num_per_page])
             essays = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=row[3], collapse_id=row[0]) for row in cur.fetchall()]
             logger.debug("Essays:\n{}".format(essays))
-        close_db()
         try:
             return render_template("show_essay.html", essays=essays, total_page=max_page, current_page=page, titles=titles, current_title=title)
         except TemplateNotFound:
@@ -95,7 +88,7 @@ def add_essay():
 
     # check if log in
     if "logged_in" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("main.login"))
 
     # start add message
     with app.app_context():
@@ -112,7 +105,6 @@ def add_essay():
 
         db.cursor().execute("insert into essay (timestamp, owner, title, content, user1_read, user2_read) values (?, ?, ?, ?, 0, 0)", [timestamp, owner, request.form["title"], request.form["content"]])
         db.commit()
-        close_db()
 
         # email reminder
         if (owner == "汪先森"):
@@ -136,4 +128,3 @@ def add_essay():
     except TemplateNotFound:
         logger.error("Template not found")
         abort(404)
-
