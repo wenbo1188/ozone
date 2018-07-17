@@ -8,7 +8,7 @@ import urllib.error as ue
 import urllib.parse as up
 import json
 import time
-from config import ProdConfig
+from config import ProdConfig, logger
 from music_util import Song
 import os
 
@@ -24,7 +24,7 @@ def songs_change(tracks : dict, res_path : str) -> bool:
             line = f.readline()
             num_of_line += 1
         except:
-            print("fail to read oneline")
+            logger.error("Fail to read oneline")
 
         while line:
             if (num_of_line % 3) == 2:
@@ -38,7 +38,7 @@ def songs_change(tracks : dict, res_path : str) -> bool:
                 line = f.readline()
                 num_of_line += 1
             except:
-                print("fail to read oneline")
+                logger.error("Fail to read oneline")
 
     f.close()
     return False
@@ -49,7 +49,7 @@ def get_songs_rank(user_id : str, name : str) -> None:
     '''
 
     url = url_base + user_id
-    res_path = "{}.txt".format(name)
+    res_path = "{}/{}.txt".format(ProdConfig.PLAYLIST_PATH, name)
 
     req = ur.Request(url)
     req.add_header("User-Agent","Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36)")
@@ -58,39 +58,39 @@ def get_songs_rank(user_id : str, name : str) -> None:
             data = response.read().decode()
             # print(data)
     except:
-        print("request timeout")
+        logger.warning("Request timeout")
         return
 
     try:
         json_data = json.loads(data)
     except:
-        print("get json data failed")
+        logger.error("Get json data failed")
         return
 
     tracks = json_data["result"]["tracks"]
-    # print(tracks)
+    logger.debug("Tracks:\n{}".format(tracks))
     if (songs_change(tracks, res_path)):
-        print("songs change")
+        logger.info("Songs change detected")
 
         song = Song()
         playlist = [{"name":tracks[i]["name"], "id":tracks[i]["id"], "url":song.getUrlSong(tracks[i]["id"])} for i in range(TOP_NUM)]
-        # print(playlist)
+        logger.debug("Playlist:\n{}".format(playlist))
 
         # Download the song and convert MP3 to OGG
         for i in range(len(playlist)):
-            download_command = "wget -nc -O ../ozone/static/songs/{}.mp3 {}".format(playlist[i]["id"], playlist[i]["url"])
+            download_command = "wget -nc -O {path}/{id}.mp3 {url}".format(path=ProdConfig.SONGS_PATH, id=playlist[i]["id"], url=playlist[i]["url"])
             err_code = os.system(download_command)
             if (err_code != 0):
-                print("fail to download")
+                logger.warning("Fail to download or the file already exists")
             else:
-                print("success download")
+                logger.info("Success download")
             
-            convert_command = "ffmpeg -i ../ozone/static/songs/{}.mp3 -c:a libvorbis -n ../ozone/static/songs/{}.ogg 1>/dev/null 2>&1".format(playlist[i]["id"], playlist[i]["id"])
+            convert_command = "ffmpeg -i {path}/{id}.mp3 -c:a libvorbis -n {path}/{id}.ogg 1>/dev/null 2>&1".format(path=ProdConfig.SONGS_PATH, id=playlist[i]["id"])
             err_code = os.system(convert_command)
             if (err_code != 0):
-                print("fail to convert mp3 to ogg")
+                logger.warning("Fail to convert mp3 to ogg or the file already exists")
             else:
-                print("success convert")
+                logger.info("Success convert")
 
         # Record the result
         with open(res_path, 'w+') as f:
@@ -102,7 +102,7 @@ def get_songs_rank(user_id : str, name : str) -> None:
         f.close()
 
     else:
-        print("no change")
+        logger.info("No song change")
 
     return
 
@@ -110,6 +110,7 @@ def query_loop() -> None:
     while (1):
         get_songs_rank(ProdConfig.USER1_PLAYLIST_ID, ProdConfig.USERNAME1)
         get_songs_rank(ProdConfig.USER2_PLAYLIST_ID, ProdConfig.USERNAME2)
+        logger.info("Wake up in {} seconds".format(QUERY_INTERVAL))
         time.sleep(QUERY_INTERVAL)
 
 if __name__ == '__main__':
