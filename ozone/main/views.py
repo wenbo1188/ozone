@@ -3,6 +3,7 @@ from flask import current_app as app
 from jinja2 import TemplateNotFound
 from ..config import logger
 from . import main_page
+from ..utils.form_util import LoginForm
 
 def get_playlist_info() -> tuple:
     '''
@@ -82,22 +83,24 @@ def get_playlist_info() -> tuple:
 
 @main_page.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        if request.form["username"] == app.config['USERNAME1'] and request.form["password"] == app.config['PASSWORD']:
-            logger.info("Login as {}".format(app.config['USERNAME1']))
-
+    form = LoginForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        if username == app.config['USERNAME1'] and password == app.config['PASSWORD']:
             session["logged_in"] = True
             session["logged_user"] = app.config['USERNAME1']
-        elif request.form["username"] == app.config['USERNAME2'] and request.form["password"] == app.config['PASSWORD']:
-            logger.info("Login as {}".format(app.config['USERNAME2']))
-
+            logger.info("Login as {}".format(app.config['USERNAME1']))
+        elif username == app.config['USERNAME2'] and password == app.config['PASSWORD']:
             session["logged_in"] = True
             session["logged_user"] = app.config['USERNAME2']
+            logger.info("Login as {}".format(app.config['USERNAME2']))
         else:
-            logger.warning("Wrong username or password: {}, {}".format(request.form["username"], request.form["password"]))
+            logger.warning("Wrong username or password: {}, {}".format(username, password))
             return render_template("login.html")
         return redirect(url_for("main.index"))
-    return render_template("login.html")
+
+    return render_template("login.html", form=form)
 
 @main_page.route('/logout')
 def logout():
