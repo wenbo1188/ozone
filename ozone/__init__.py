@@ -1,9 +1,9 @@
 from flask import Flask, g
-from config import logger
+from .config import logger
 from flask import current_app
-from main import main_page
-from blueprints.message import message_page
-from column import column_page
+from .main import main_page
+from .message import message_page
+from .column import column_page
 import sqlite3
 
 def danger_str_filter(string_to_filter : str):

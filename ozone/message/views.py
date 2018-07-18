@@ -3,8 +3,8 @@ from flask import current_app as app
 from jinja2 import TemplateNotFound
 import sqlite3
 import time
-from reminder_util import EmailReminder
-from config import logger
+from ..utils.reminder_util import EmailReminder
+from ..config import logger
 from . import message_page
 
 def connect_db():
@@ -88,7 +88,7 @@ def add_message():
             logger.error("Invalid username, something goes wrong!!!")
 
         message_content = "A new message for you, go and have a look~"
-        reminder = EmailReminder(app.config['MAIL_SERVER'], app.config['MAIL_PORT'], app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'], False)
+        reminder = EmailReminder(app.config['MAIL_SERVER'], app.config['MAIL_PORT'], app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'], False, logger)
         try:
             reminder.send(receiver, receiver_name, message_content)
         except:

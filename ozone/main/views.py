@@ -1,7 +1,7 @@
 from flask import render_template, request, session, redirect, url_for, abort
 from flask import current_app as app
 from jinja2 import TemplateNotFound
-from config import logger
+from ..config import logger
 from . import main_page
 
 def get_playlist_info() -> tuple:

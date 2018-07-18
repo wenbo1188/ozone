@@ -1,9 +1,9 @@
 from ozone import create_app
-from config import ProdConfig
+from ozone.config import ProdConfig
 from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
-from songs_rank.songs_rank import query_loop
+from ozone.utils.music_util import query_loop
 import threading
 
 def songs_rank_thread():
