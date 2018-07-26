@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block body %}
+
+<!-- jumptron -->
 <div class="jumbotron jumbotron-fluid">
 	<div class="container" align="center">
 		<h2 class="text-info" style="font-family:arial;font-weight:bold;font-size:60px">Ozone</h2>
@@ -14,9 +16,13 @@
 </div>
 
 {% if session.logged_in %}
+<br>
+
+<!-- favorite song -->
 <div class="container-fluid">
 	<div class="row">
-		<div class="col-sm-10 offset-sm-1 col-md-3 offset-md-9">
+		<div class="col-sm-2"></div>
+		<div class="col-sm-4">
 			<div class="card bg-light text-dark">
 				<div class="card-header">
 					<h3 class="card-title">汪先森最近喜欢的音乐</h3>
@@ -36,14 +42,7 @@
 				</div>
 			</div>
 		</div>
-	</div>
-</div>
-
-<br>
-
-<div class="container-fluid">
-	<div class="row">
-		<div class="col-sm-10 offset-sm-1 col-md-3 offset-md-9">
+		<div class="col-sm-4">
 			<div class="card bg-light text-dark">
 				<div class="card-header">
 					<h3 class="card-title">小笨笨最近喜欢的音乐</h3>
@@ -63,6 +62,66 @@
 				</div>
 			</div>
 		</div>
+		<div class="col-sm-2"></div>
+	</div>
+</div>
+
+<br>
+<br>
+
+<!-- exhibition -->
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-sm-8 offset-sm-2">
+			<h1>精选专栏</h1>
+		</div>
+	</div>
+	<br>
+	<div class="row">
+		<div class="col-sm-2"></div>
+		<div class="col-sm-4">
+			<div class="card">
+				<div class="card-body">
+					<h1 class="card-title">{{ exhibition[0].title }}</h1>
+					<p class="card-text">{{ exhibition[0].content|striptags|my_truncate(255) }}</p>
+					<a href="{{ url_for('column.show_essay', title=exhibition[0].title, page=1) }}" class="card-link float-right">更多</a>
+				</div>
+			</div>
+		</div>
+		<div class="col-sm-4">
+			<div class="card">
+				<div class="card-body">
+					<h1 class="card-title">{{ exhibition[1].title }}</h1>
+					<p class="card-text">{{ exhibition[1].content|striptags|my_truncate(255) }}</p>
+					<a href="{{ url_for('column.show_essay', title=exhibition[1].title, page=1) }}" class="card-link float-right">更多</a>
+				</div>
+			</div>
+		</div>
+		<div class="col-sm-2"></div>
+	</div>
+	<br>
+	<br>
+	<div class="row">
+		<div class="col-sm-2"></div>
+		<div class="col-sm-4">
+			<div class="card">
+				<div class="card-body">
+					<h1 class="card-title">{{ exhibition[2].title }}</h1>
+					<p class="card-text">{{ exhibition[2].content|striptags|my_truncate(255) }}</p>
+					<a href="{{ url_for('column.show_essay', title=exhibition[2].title, page=1) }}" class="card-link float-right">更多</a>
+				</div>
+			</div>
+		</div>
+		<div class="col-sm-4">
+			<div class="card">
+				<div class="card-body">
+					<h1 class="card-title">{{ exhibition[3].title }}</h1>
+					<p class="card-text">{{ exhibition[3].content|striptags|my_truncate(255) }}</p>
+					<a href="{{ url_for('column.show_essay', title=exhibition[3].title, page=1) }}" class="card-link float-right">更多</a>
+				</div>
+			</div>
+		</div>
+		<div class="col-sm-2"></div>
 	</div>
 </div>
 {% endif %}

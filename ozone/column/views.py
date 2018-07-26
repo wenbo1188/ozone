@@ -1,23 +1,16 @@
-from flask import Blueprint, render_template, abort, g, request, redirect, url_for, session
-from flask import current_app as app
-from jinja2 import TemplateNotFound
 import sqlite3
 import time
-from ..utils.reminder_util import EmailReminder
-from ..config import logger
+
+from jinja2 import TemplateNotFound
+
+from flask import Blueprint, abort
+from flask import current_app as app
+from flask import g, redirect, render_template, request, session, url_for
+
 from . import column_page
-
-def connect_db():
-    logger.info("Connect to database...")
-
-    rv = sqlite3.connect(app.config['DATABASE'])
-    rv.row_factory = sqlite3.Row
-    return rv
-
-def get_db():
-    if not hasattr(g, 'sqlite3_db'):
-        g.sqlite_db = connect_db()
-    return g.sqlite_db
+from ..config import logger
+from ..utils.db_util import get_db
+from ..utils.reminder_util import EmailReminder
 
 @column_page.route('/<title>/<int:page>')
 def show_essay(title, page=1):

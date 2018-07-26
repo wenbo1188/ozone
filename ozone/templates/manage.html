@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container-fluid">
+    <div class="table-responsive-md">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>
+                        <h2>内容</h2>
+                    </th>
+                    <th>
+                        <h2>日期</h2>
+                    </th>
+                    <th>
+                        <h2>操作</h2>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for message in messages %}
+                    <tr>
+                        <td>
+                            <h4>{{ message.content|striptags|my_truncate(40) }}</h4>
+                        </td>
+                        <td>
+                            <h4>{{ message.timestamp|my_timefmt }}</h4>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('message.update', timestamp=message.timestamp) }}">修改</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,9 +1,16 @@
-from flask import render_template, request, session, redirect, url_for, abort
-from flask import current_app as app
+import time
+
 from jinja2 import TemplateNotFound
-from ..config import logger
+
+from flask import abort
+from flask import current_app as app
+from flask import redirect, render_template, request, session, url_for
+
 from . import main_page
+from ..config import logger
+from ..utils.db_util import get_db
 from ..utils.form_util import LoginForm
+
 
 def get_playlist_info() -> tuple:
     '''
@@ -81,6 +88,20 @@ def get_playlist_info() -> tuple:
 
     return playlist1, playlist2
 
+def get_exhibition_essay() -> list:
+    '''
+    Get essay for exhibition in index.html
+    '''
+
+    exhibition_num = 4
+
+    with app.app_context():
+        db = get_db()
+        cur = db.cursor().execute("select timestamp, owner, title, content from essay order by timestamp desc limit ?", [exhibition_num])
+        exhibition = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=row[3], collapse_id=row[0]) for row in cur.fetchall()]
+
+    return exhibition
+
 @main_page.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -115,6 +136,28 @@ def index():
 
     if "logged_in" in session and session["logged_in"] == True:
         list1, list2 = get_playlist_info() #to be removed
-        return render_template("index.html", playlist1=list1, playlist2=list2)
+        exhibition = get_exhibition_essay()
+        return render_template("index.html", playlist1=list1, playlist2=list2, exhibition=exhibition)
     else:
         return render_template("index.html")
+
+@main_page.route('/manage')
+def manage():
+    if "logged_in" in session and session["logged_in"] == True:
+        with app.app_context():
+            db = get_db()
+            if session["logged_user"] == app.config["USERNAME1"]:
+                owner = "汪先森"
+            elif session["logged_user"] == app.config["USERNAME2"]:
+                owner = "小笨笨"
+            else:
+                logger.error("Invalid username, something goes wrong!!!")
+
+            logger.debug("username:{}".format(owner))
+            cur = db.cursor().execute("select timestamp, owner, content from message where owner = ? order by timestamp desc", [owner])
+            messages = [dict(timestamp=row[0], owner=row[1], content=row[2]) for row in cur.fetchall()]
+            logger.debug("message:\n{}".format(messages))
+            
+            return render_template("manage.html", messages=messages)
+    else:
+        return redirect(url_for("main.login"))

@@ -4,16 +4,35 @@ from flask import current_app
 from .main import main_page
 from .message import message_page
 from .column import column_page
-import sqlite3
+from .utils.db_util import get_db
+import time
 
 def danger_str_filter(string_to_filter : str):
-    '''filter to skip dangerous html tag'''
+    '''
+    Filter to skip dangerous html tag
+    '''
 
     danger_list = ["<script>", "</script>", "<body>", "</body>"]
     for danger_str in danger_list:
         string_to_filter = string_to_filter.replace(danger_str, "")
 
     return string_to_filter
+
+def my_truncate(string_to_filter : str, length=255, end="..."):
+    '''
+    Truncate strings to the given length
+    '''
+
+    result = "{}{}".format(string_to_filter[:length], end)
+    return result
+
+def my_timefmt(string_to_filter : str):
+    '''
+    Transform timestamp of integer to certain format
+    '''
+
+    result = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(string_to_filter))
+    return result
 
 def register_filter():
     '''Register the filter to skip dangerous html tag'''
@@ -22,18 +41,8 @@ def register_filter():
 
     env = current_app.jinja_env
     env.filters['my_str_filter'] = danger_str_filter
-
-def connect_db():
-    logger.info("Connect to database...")
-    
-    rv = sqlite3.connect(current_app.config['DATABASE'])
-    rv.row_factory = sqlite3.Row
-    return rv
-
-def get_db():
-    if not hasattr(g, 'sqlite_db'):
-        g.sqlite_db = connect_db()
-        return g.sqlite_db
+    env.filters['my_truncate'] = my_truncate
+    env.filters['my_timefmt'] = my_timefmt
 
 def init_db():
     logger.info("Initializing database...")
@@ -46,8 +55,6 @@ def init_db():
             logger.info("Success to init db")
         except:
             logger.error("Fail to init db")
-        # finally:
-            # close_db()
 
 def create_app(config):
     '''Initializing app'''

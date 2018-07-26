@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container-fluid">
+    <form action="{{ url_for('message.update', timestamp=timestamp) }}" method="post">
+        {{ form.hidden_tag() }}
+        <textarea class="form-control" name="content">{{ old_content.content }}</textarea>
+        <button type="submit" class="btn btn-primary btn-lg float-right">提交</button>
+        <a href="{{ url_for('main.manage') }}" class="btn btn-lg btn-danger float-right" role="button">撤销修改</a>
+    </form>
+</div>
+{% endblock %}

@@ -44,13 +44,7 @@
 				</div>
 				<div class="card">
 					<div class="card-body">
-						<h1 class="card-title">留言板</h1>
-					<form action="{{ url_for('message.add_message') }}" method="post" class="add-message">
-						<div class="form-group">
-							<textarea class="form-control" id="content" name="content" placeholder="说些什么吧..."></textarea>
-						</div>
-						<button type="submit" class="btn btn-primary btn-lg float-right">提交</button>
-					</form>
+						<a href="{{ url_for('message.add_message') }}">留言板</a>
 					</div>
 				</div>
 				<br>

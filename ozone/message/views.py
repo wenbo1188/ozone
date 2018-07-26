@@ -1,23 +1,17 @@
-from flask import render_template, request, g, session, redirect, url_for, abort
-from flask import current_app as app
-from jinja2 import TemplateNotFound
 import sqlite3
 import time
-from ..utils.reminder_util import EmailReminder
-from ..config import logger
+
+from jinja2 import TemplateNotFound
+
+from flask import abort
+from flask import current_app as app
+from flask import g, redirect, render_template, request, session, url_for
+
 from . import message_page
-
-def connect_db():
-    logger.info("Connect to database...")
-
-    rv = sqlite3.connect(app.config['DATABASE'])
-    rv.row_factory = sqlite3.Row
-    return rv
-
-def get_db():
-    if not hasattr(g, 'sqlite3_db'):
-        g.sqlite_db = connect_db()
-    return g.sqlite_db
+from ..config import logger
+from ..utils.db_util import get_db
+from ..utils.reminder_util import EmailReminder
+from ..utils.form_util import MessageForm
 
 @message_page.route('/<int:page>')
 def show_message(page=1):
@@ -55,47 +49,88 @@ def show_message(page=1):
             logger.error("Template not found")
             abort(404)
 
-@message_page.route('/add', methods=['POST'])
+@message_page.route('/add', methods=['GET', 'POST'])
 def add_message():
     owner = None
+    form = MessageForm()
 
     # check if log in
     if "logged_in" not in session:
         return redirect(url_for("main.login"))
 
-    # start add message
-    with app.app_context():
-        db = get_db()
-        timestamp = int(time.time())
-        if session["logged_user"] == "wang":
-            owner = "汪先森"
-        elif session["logged_user"] == "miao":
-            owner = "小笨笨"
-        else:
-            logger.error("Invalid username, something goes wrong!!!")
+    if form.validate_on_submit():
+        content = form.content.data
+        # start add message
+        with app.app_context():
+            db = get_db()
+            timestamp = int(time.time())
+            if session["logged_user"] == app.config['USERNAME1']:
+                owner = "汪先森"
+            elif session["logged_user"] == app.config['USERNAME2']:
+                owner = "小笨笨"
+            else:
+                logger.error("Invalid username, something goes wrong!!!")
 
-        db.cursor().execute("insert into message (timestamp, owner, content) values (?, ?, ?)", [timestamp, owner, request.form["content"]])
-        db.commit()
+            db.cursor().execute("insert into message (timestamp, owner, content) values (?, ?, ?)", [timestamp, owner, content])
+            db.commit()
 
-        # email reminder
-        if (owner == "汪先森"):
-            receiver = app.config['USER2_MAILADDRESS']
-            receiver_name = app.config['USERNAME2']
-        elif (owner == "小笨笨"):
-            receiver = app.config['USER1_MAILADDRESS']
-            receiver_name = app.config['USERNAME1']
-        else:
-            logger.error("Invalid username, something goes wrong!!!")
+            # email reminder
+            if (owner == "汪先森"):
+                receiver = app.config['USER2_MAILADDRESS']
+                receiver_name = app.config['USERNAME2']
+            elif (owner == "小笨笨"):
+                receiver = app.config['USER1_MAILADDRESS']
+                receiver_name = app.config['USERNAME1']
+            else:
+                logger.error("Invalid username, something goes wrong!!!")
 
-        message_content = "A new message for you, go and have a look~"
-        reminder = EmailReminder(app.config['MAIL_SERVER'], app.config['MAIL_PORT'], app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'], False, logger)
-        try:
-            reminder.send(receiver, receiver_name, message_content)
-        except:
-            logger.warning("Send email failure")
+            message_content = "A new message for you, go and have a look~"
+            reminder = EmailReminder(app.config['MAIL_SERVER'], app.config['MAIL_PORT'], app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'], False, logger)
+            try:
+                reminder.send(receiver, receiver_name, message_content)
+            except:
+                logger.warning("Send email failure")
 
-        try:
-            return redirect(url_for("message.show_message", page=1))
-        except TemplateNotFound:
-            logger.error("Template not found")
-            abort(404)
+            try:
+                return redirect(url_for("message.show_message", page=1))
+            except TemplateNotFound:
+                logger.error("Template not found")
+                abort(404)
+    else:
+        return render_template('add_message.html', form=form)
+
+@message_page.route('/update/<int:timestamp>', methods=['GET', 'POST'])
+def update(timestamp):
+    # check if log in
+    if "logged_in" not in session:
+        return redirect(url_for("main.login"))
+
+    form = MessageForm()
+
+    if form.validate_on_submit():
+        content = form.content.data
+        logger.info("Editing message content with timestamp {}".format(timestamp))
+        logger.info("New content:\n{}".format(content))
+
+        with app.app_context():
+            db = get_db()
+            timestamp_new = int(time.time())
+
+            db.cursor().execute("update message set timestamp = ?, content = ? where timestamp = ?", [timestamp_new, content, timestamp])
+            db.commit()
+            logger.info("Success update message")
+
+            try:
+                return redirect(url_for("main.manage"))
+            except TemplateNotFound:
+                logger.error("Template not found")
+                abort(404)
+    else:
+        with app.app_context():
+            db = get_db()
+            cur = db.cursor().execute("select content from message where timestamp = ?", [timestamp])
+            old_content = dict(content=cur.fetchone()[0])
+            logger.debug("{}".format(old_content))
+        
+            return render_template("update.html", form=form, old_content=old_content, timestamp=timestamp)
+    
