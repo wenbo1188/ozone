@@ -10,6 +10,7 @@ from . import main_page
 from ..config import logger
 from ..utils.db_util import get_db
 from ..utils.form_util import LoginForm
+from sqlite3 import DatabaseError
 
 
 def get_playlist_info() -> tuple:
@@ -97,7 +98,11 @@ def get_exhibition_essay() -> list:
 
     with app.app_context():
         db = get_db()
-        cur = db.cursor().execute("select timestamp, owner, title, content from essay order by timestamp desc limit ?", [exhibition_num])
+        try:
+            cur = db.cursor().execute("select timestamp, owner, title, content from essay order by timestamp desc limit ?", [exhibition_num])
+        except DatabaseError as err:
+            logger.error("Invalid database operation:{}".format(err))
+            return []
         exhibition = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=row[3], collapse_id=row[0]) for row in cur.fetchall()]
 
     return exhibition
@@ -105,6 +110,7 @@ def get_exhibition_essay() -> list:
 @main_page.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
+
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
@@ -154,10 +160,24 @@ def manage():
                 logger.error("Invalid username, something goes wrong!!!")
 
             logger.debug("username:{}".format(owner))
-            cur = db.cursor().execute("select timestamp, owner, content from message where owner = ? order by timestamp desc", [owner])
+            # get messages
+            try:
+                cur = db.cursor().execute("select timestamp, owner, content from message where owner = ? order by timestamp desc", [owner])
+            except DatabaseError as err:
+                logger.error("Invalid database operation:{}".format(err))
+                abort(404)
             messages = [dict(timestamp=row[0], owner=row[1], content=row[2]) for row in cur.fetchall()]
             logger.debug("message:\n{}".format(messages))
+
+            # get essays
+            try:
+                cur = db.cursor().execute("select timestamp, owner, title, content from essay where owner = ? order by timestamp desc", [owner])
+            except DatabaseError as err:
+                logger.error("Invalid database operation:{}".format(err))
+                abort(404)
+            essays = [dict(timestamp=row[0], owner=row[1], title=row[2], content=row[3]) for row in cur.fetchall()]
+            logger.debug("essay:\n{}".format(essays))
             
-            return render_template("manage.html", messages=messages)
+            return render_template("manage.html", messages=messages, essays=essays)
     else:
         return redirect(url_for("main.login"))

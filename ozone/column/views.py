@@ -11,6 +11,7 @@ from . import column_page
 from ..config import logger
 from ..utils.db_util import get_db
 from ..utils.reminder_util import EmailReminder
+from ..utils.form_util import EssayForm
 
 @column_page.route('/<title>/<int:page>')
 def show_essay(title, page=1):
@@ -21,7 +22,11 @@ def show_essay(title, page=1):
         db = get_db()
         num_per_page = app.config['COLUMN_PER_PAGE']
         # get all the titles
-        cur = db.cursor().execute("select distinct title from essay order by timestamp desc")
+        try:
+            cur = db.cursor().execute("select distinct title from essay order by timestamp desc")
+        except sqlite3.DatabaseError as err:
+            logger.error("Invalid database operation:{}".format(err))
+            abort(404)
         titles = [row[0] for row in cur.fetchall()]
         logger.debug("All the titles:\n{}".format(titles))
 
@@ -29,7 +34,11 @@ def show_essay(title, page=1):
             logger.debug("Title is all")
 
             # get total num of essays
-            cur = db.cursor().execute("select count(*) from essay")
+            try:
+                cur = db.cursor().execute("select count(*) from essay")
+            except sqlite3.DatabaseError as err:
+                logger.error("Invalid database operation:{}".format(err))
+                abort(404)
             num = cur.fetchall()[0][0]
             if (num % num_per_page == 0):
                 max_page = int(num / num_per_page)
@@ -45,12 +54,20 @@ def show_essay(title, page=1):
                 logger.warning("Illegal page number: {}".format(page))
                 page = 1
 
-            cur = db.cursor().execute("select timestamp, owner, title, content from essay order by timestamp desc limit ? offset ?", [num_per_page, (page - 1) * num_per_page])
+            try:
+                cur = db.cursor().execute("select timestamp, owner, title, content from essay order by timestamp desc limit ? offset ?", [num_per_page, (page - 1) * num_per_page])
+            except sqlite3.DatabaseError as err:
+                logger.error("Invalid database operation:{}".format(err))
+                abort(404)
             essays = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=row[3], collapse_id=row[0]) for row in cur.fetchall()]
             logger.debug("Essays:\n{}".format(essays))
         else:
             logger.debug("Title is {}".format(title))
-            cur = db.cursor().execute("select count(*) from essay where title = ?", [title])
+            try:
+                cur = db.cursor().execute("select count(*) from essay where title = ?", [title])
+            except sqlite3.DatabaseError as err:
+                logger.error("Invalid database operation:{}".format(err))
+                abort(404)
             num = cur.fetchall()[0][0]
             if (num % num_per_page == 0):
                 max_page = int(num / num_per_page)
@@ -66,7 +83,11 @@ def show_essay(title, page=1):
                 logger.warning("Illegal page number: {}".format(page))
                 page = 1
 
-            cur = db.cursor().execute("select timestamp, owner, title, content from essay where essay.title = ? order by timestamp desc limit ? offset ?", [title, num_per_page, (page - 1) * num_per_page])
+            try:
+                cur = db.cursor().execute("select timestamp, owner, title, content from essay where essay.title = ? order by timestamp desc limit ? offset ?", [title, num_per_page, (page - 1) * num_per_page])
+            except sqlite3.DatabaseError as err:
+                logger.error("Invalid database operation:{}".format(err))
+                abort(404)
             essays = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=row[3], collapse_id=row[0]) for row in cur.fetchall()]
             logger.debug("Essays:\n{}".format(essays))
         try:
@@ -96,7 +117,11 @@ def add_essay():
 
         logger.debug("Added title is:\n{}\nContent is:\n{}".format(request.form["title"], request.form["content"]))
 
-        db.cursor().execute("insert into essay (timestamp, owner, title, content, user1_read, user2_read) values (?, ?, ?, ?, 0, 0)", [timestamp, owner, request.form["title"], request.form["content"]])
+        try:
+            db.cursor().execute("insert into essay (timestamp, owner, title, content, user1_read, user2_read) values (?, ?, ?, ?, 0, 0)", [timestamp, owner, request.form["title"], request.form["content"]])
+        except sqlite3.DatabaseError as err:
+            logger.error("Invalid database operation:{}".format(err))
+            abort(404)
         db.commit()
 
         # email reminder
@@ -121,3 +146,66 @@ def add_essay():
     except TemplateNotFound:
         logger.error("Template not found")
         abort(404)
+
+@column_page.route('/update/<int:timestamp>', methods=['GET', 'POST'])
+def update(timestamp):
+    # check if log in
+    if "logged_in" not in session:
+        return redirect(url_for("main.login"))
+
+    form = EssayForm()
+
+    if form.validate_on_submit():
+        title = form.title.data
+        content = form.content.data
+        logger.info("Editing essay with timestamp {}".format(timestamp))
+        logger.info("New title:\n{}\nNew content:\n{}".format(title, content))
+
+        with app.app_context():
+            db = get_db()
+            timestamp_new = int(time.time())
+
+            try:
+                db.cursor().execute("update essay set timestamp = ?, title = ?, content = ? where timestamp = ?", [timestamp_new, title, content, timestamp])
+            except sqlite3.DatabaseError as err:
+                logger.error("Invalid database operation:{}".format(err))
+                abort(404)
+            db.commit()
+            logger.info("Success update essay")
+
+            try:
+                return redirect(url_for("main.manage"))
+            except TemplateNotFound:
+                logger.error("Template not found")
+                abort(404)
+    else:
+        with app.app_context():
+            db = get_db()
+            try:
+                cur = db.cursor().execute("select title, content from essay where timestamp = ?", [timestamp])
+            except sqlite3.DatabaseError as err:
+                logger.error("Invalid database operation:{}".format(err))
+                abort(404)
+            result = cur.fetchone()
+            old_essay = dict(title=result[0], content=result[1])
+            logger.debug("{}".format(old_essay))
+        
+            return render_template("update.html", form=form, old_essay=old_essay, timestamp=timestamp)
+
+@column_page.route('/delete/<int:timestamp>', methods=['GET'])
+def delete(timestamp):
+    #check if log in
+    if "logged_in" not in session:
+        return redirect(url_for("main.login"))
+    
+    with app.app_context():
+        db = get_db()
+        try:
+            db.cursor().execute("delete from essay where timestamp = ?", [timestamp])
+        except sqlite3.DatabaseError as err:
+            logger.error("Invalid database operation:{}".format(err))
+            abort(404)
+        db.commit()
+        logger.info("Success delete essay")
+
+        return redirect((url_for('main.manage')))

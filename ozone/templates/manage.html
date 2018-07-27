@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="container-fluid">
+    <h1>留言</h1>
+    <br>
     <div class="table-responsive-md">
         <table class="table table-hover">
             <thead>
@@ -26,7 +28,101 @@
                             <h4>{{ message.timestamp|my_timefmt }}</h4>
                         </td>
                         <td>
-                            <a href="{{ url_for('message.update', timestamp=message.timestamp) }}">修改</a>
+                            <a href="{{ url_for('message.update', timestamp=message.timestamp) }}" class="btn btn-sm btn-primary" role="button">修改</a>
+                            <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#myModal_{{ message.timestamp }}">删除</button>
+                            <div class="modal fade" id="myModal_{{ message.timestamp }}">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <!-- 模态框头部 -->
+                                        <div class="modal-header">
+                                            <div class="d-flex justify-content-center">
+                                                <h3>NOTICE</h3>
+                                            </div>
+                                        </div>
+                               
+                                        <!-- 模态框主体 -->
+                                        <div class="modal-body">
+                                            <div class="d-flex justify-content-center">
+                                                <h4>删除后无法恢复，请谨慎操作</h4>
+                                            </div>
+                                            <div class="d-flex justify-content-around">
+                                                <a href="{{ url_for('message.delete', timestamp=message.timestamp) }}" class="btn btn-lg btn-danger" role="button">确认删除</a>
+                                                <button type="button" class="btn btn-lg btn-primary" data-dismiss="modal">不，手抖按错了</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<div class="container-fluid">
+    <h1>专栏</h1>
+    <br>
+    <div class="table-responsive-md">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>
+                        <h2>标题</h2>
+                    </th>
+                    <th>
+                        <h2>内容</h2>
+                    </th>
+                    <th>
+                        <h2>日期</h2>
+                    </th>
+                    <th>
+                        <h2>操作</h2>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for essay in essays %}
+                    <tr>
+                        <td>
+                            <h4>{{ essay.title }}</h4>
+                        </td>
+                        <td>
+                            <h4>{{ essay.content|striptags|my_truncate(40) }}</h4>
+                        </td>
+                        <td>
+                            <h4>{{ essay.timestamp|my_timefmt }}</h4>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('column.update', timestamp=essay.timestamp) }}" class="btn btn-sm btn-primary" role="button">修改</a>
+                            <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#myModal_{{ essay.timestamp }}">删除</button>
+                            <div class="modal fade" id="myModal_{{ essay.timestamp }}">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <!-- 模态框头部 -->
+                                        <div class="modal-header">
+                                            <div class="d-flex justify-content-center">
+                                                <h3>NOTICE</h3>
+                                            </div> 
+                                        </div>
+                               
+                                        <!-- 模态框主体 -->
+                                        <div class="modal-body">
+                                            <div class="d-flex justify-content-center">
+                                                <h4>删除后无法恢复，请谨慎操作</h4>
+                                            </div>
+                                            <div class="d-flex justify-content-around">
+                                                <a href="{{ url_for('column.delete', timestamp=essay.timestamp) }}" class="btn btn-lg btn-danger" role="button">确认删除</a>
+                                                <button type="button" class="btn btn-lg btn-primary" data-dismiss="modal">不，手抖按错了</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 {% endfor %}

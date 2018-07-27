@@ -1,11 +1,26 @@
 {% extends "base.html" %}
 {% block body %}
+
+{% if old_message %}
+<!-- message -->
 <div class="container-fluid">
     <form action="{{ url_for('message.update', timestamp=timestamp) }}" method="post">
         {{ form.hidden_tag() }}
-        <textarea class="form-control" name="content">{{ old_content.content }}</textarea>
+        <textarea class="form-control" name="content">{{ old_message.content }}</textarea>
         <button type="submit" class="btn btn-primary btn-lg float-right">提交</button>
         <a href="{{ url_for('main.manage') }}" class="btn btn-lg btn-danger float-right" role="button">撤销修改</a>
     </form>
 </div>
+{% elif old_essay %}
+<!-- column -->
+<div class="container-fluid">
+    <form action="{{ url_for('column.update', timestamp=timestamp) }}" method="post">
+        {{ form.hidden_tag() }}
+        <input type="text" name="title" class="form-control" value="{{ old_essay.title }}">
+        <textarea class="form-control" name="content">{{ old_essay.content }}</textarea>
+        <button type="submit" class="btn btn-primary btn-lg float-right">提交</button>
+        <a href="{{ url_for('main.manage') }}" class="btn btn-lg btn-danger float-right" role="button">撤销修改</a>
+    </form>
+</div>
+{% endif %}
 {% endblock %}

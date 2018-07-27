@@ -23,7 +23,11 @@ def show_message(page=1):
         num_per_page = app.config['MESSAGE_PER_PAGE']
 
         # get total num of messages
-        cur = db.cursor().execute("select count(*) from message")
+        try:
+            cur = db.cursor().execute("select count(*) from message")
+        except sqlite3.DatabaseError as err:
+            logger.error("Invalid database operation:{}".format(err))
+            abort(404)
         num = cur.fetchall()[0][0]
         if (num % num_per_page == 0):
             max_page = int(num / num_per_page)
@@ -40,7 +44,11 @@ def show_message(page=1):
             logger.warning("Illegal page number: {}".format(page))
             page = 1
 
-        cur = db.cursor().execute("select timestamp, owner, content from message order by timestamp desc limit ? offset ?", [num_per_page, (page - 1) * num_per_page])
+        try:
+            cur = db.cursor().execute("select timestamp, owner, content from message order by timestamp desc limit ? offset ?", [num_per_page, (page - 1) * num_per_page])
+        except sqlite3.DatabaseError as err:
+            logger.error("Invalid database operation:{}".format(err))
+            abort(404)
         messages = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], content=row[2]) for row in cur.fetchall()]
         logger.debug("Messages are:\n{}".format(messages))
         try:
@@ -70,8 +78,11 @@ def add_message():
                 owner = "小笨笨"
             else:
                 logger.error("Invalid username, something goes wrong!!!")
-
-            db.cursor().execute("insert into message (timestamp, owner, content) values (?, ?, ?)", [timestamp, owner, content])
+            try:
+                db.cursor().execute("insert into message (timestamp, owner, content) values (?, ?, ?)", [timestamp, owner, content])
+            except sqlite3.DatabaseError as err:
+                logger.error("Invalid database operation:{}".format(err))
+                abort(404)
             db.commit()
 
             # email reminder
@@ -116,7 +127,11 @@ def update(timestamp):
             db = get_db()
             timestamp_new = int(time.time())
 
-            db.cursor().execute("update message set timestamp = ?, content = ? where timestamp = ?", [timestamp_new, content, timestamp])
+            try:
+                db.cursor().execute("update message set timestamp = ?, content = ? where timestamp = ?", [timestamp_new, content, timestamp])
+            except sqlite3.DatabaseError as err:
+                logger.error("Invalid database operation:{}".format(err))
+                abort(404)
             db.commit()
             logger.info("Success update message")
 
@@ -128,9 +143,30 @@ def update(timestamp):
     else:
         with app.app_context():
             db = get_db()
-            cur = db.cursor().execute("select content from message where timestamp = ?", [timestamp])
-            old_content = dict(content=cur.fetchone()[0])
-            logger.debug("{}".format(old_content))
+            try:
+                cur = db.cursor().execute("select content from message where timestamp = ?", [timestamp])
+            except sqlite3.DatabaseError as err:
+                logger.error("Invalid database operation:{}".format(err))
+                abort(404)
+            old_message = dict(content=cur.fetchone()[0])
+            logger.debug("{}".format(old_message))
         
-            return render_template("update.html", form=form, old_content=old_content, timestamp=timestamp)
+            return render_template("update.html", form=form, old_message=old_message, timestamp=timestamp)
+
+@message_page.route('/delete/<int:timestamp>', methods=['GET'])
+def delete(timestamp):
+    #check if log in
+    if "logged_in" not in session:
+        return redirect(url_for("main.login"))
     
+    with app.app_context():
+        db = get_db()
+        try:
+            db.cursor().execute("delete from message where timestamp = ?", [timestamp])
+        except sqlite3.DatabaseError as err:
+            logger.error("Invalid database operation:{}".format(err))
+            abort(404)
+        db.commit()
+        logger.info("Success delete message")
+
+        return redirect((url_for('main.manage')))
