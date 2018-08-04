@@ -8,13 +8,49 @@
 
 	<!-- Bootstrap CSS -->
 	<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/4.1.0/css/bootstrap.min.css">
-	<!--<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css">-->
 	<link rel="stylesheet" href="{{ url_for('static', filename='AudioPlayer/css/audioplayer.css') }}" />
 	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 </head>
 <style>
 	.navbar {
 		margin-bottom: 0px;
+	}
+
+	.exhibition {
+		margin:5px;
+		-webkit-box-shadow: inset 0 1px 0 rgba( 255, 255, 255, .15 ), 0 0 1.25em rgba( 0, 0, 0, .5 ); /* 20 */
+		-moz-box-shadow: inset 0 1px 0 rgba( 255, 255, 255, .15 ), 0 0 1.25em rgba( 0, 0, 0, .5 ); /* 20 */
+		box-shadow: inset 0 1px 0 rgba( 255, 255, 255, .15 ), 0 0 1.25em rgba( 0, 0, 0, .3 ); /* 20 */
+	}
+
+	.exhibition img {
+		display: block;
+		border: 0;
+		width: 100%;
+	}
+
+	.avatar {
+		display: block;
+		width: 300px;
+		margin: 5px;
+	}
+	
+	.avatar img {
+		display: block;
+		border: 0;
+		width: 100%;
+		transform: scale(1);
+		transition: all 1s ease 0s;
+		-webkit-transform: scale(1);
+		-webkit-transform: all 1s ease 0s;
+		border-radius: 2px;
+	}
+	
+	.avatar:hover img {
+		transform: scale(1.1);
+		transition: all 1s ease 0s;
+		-webkit-transform: scale(1.1);
+		-webkit-transform: all 1s ease 0s;
 	}
 </style>
 
@@ -28,16 +64,26 @@
 		<div class="collapse navbar-collapse" id="collapsibleNavbar">
 			<ul class="navbar-nav">
 				<li class="nav-item">
-					<a class="nav-link" href="{{ url_for("main.index") }}">主页</a>
+					<a class="nav-link" href="{{ url_for('main.index') }}">主页</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="{{ url_for("message.show_message", page=1) }}">留言</a>
+					<a class="nav-link" href="{{ url_for('message.show_message', page=1) }}">留言</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="{{ url_for("column.show_essay", title="all", page=1) }}">专栏</a>
+					<a class="nav-link" href="{{ url_for('column.show_essay', title='all', page=1) }}">专栏</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="{{ url_for("main.manage") }}">管理</a>
+					<a class="nav-link" href="{{ url_for('album.show_photo') }}">相册</a>
+				</li>
+				<li class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">管理</a>
+					<div class="dropdown-menu">
+						<a href="{{ url_for('main.manage', function='message') }}" class="dropdown-item">留言</a>
+						<div class="dropdown-divider"></div>
+						<a href="{{ url_for('main.manage', function='column') }}" class="dropdown-item">专栏</a>
+						<div class="dropdown-divider"></div>
+						<a href="{{ url_for('main.manage', function='album') }}" class="dropdown-item">相册</a>
+					</div>
 				</li>
 			</ul>
 			<ul class="navbar-nav float-right">
@@ -45,7 +91,14 @@
 			</ul>
 		</div>
 	</nav>
-	{% endif %} {% block body %}{% endblock %}
+	{% endif %}
+	{% for message in get_flashed_messages(with_categories=True) %}
+	<div class="alert alert-{{ message[0] }} alert-dismissable fade show">
+		<button type="button" class="close" data-dismiss="alert">&times;</button>
+		<strong>{{ message[1] }}</strong>
+	</div>  
+	{% endfor %}
+	{% block body %}{% endblock %}
 </body>
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->

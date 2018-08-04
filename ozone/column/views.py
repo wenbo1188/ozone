@@ -5,7 +5,7 @@ from jinja2 import TemplateNotFound
 
 from flask import Blueprint, abort
 from flask import current_app as app
-from flask import g, redirect, render_template, request, session, url_for
+from flask import g, redirect, render_template, request, session, url_for, flash
 
 from . import column_page
 from ..config import logger
@@ -16,6 +16,7 @@ from ..utils.form_util import EssayForm
 @column_page.route('/<title>/<int:page>')
 def show_essay(title, page=1):
     if "logged_in" not in session:
+        flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
 
     with app.app_context():
@@ -102,6 +103,7 @@ def add_essay():
 
     # check if log in
     if "logged_in" not in session:
+        flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
 
     # start add message
@@ -142,6 +144,7 @@ def add_essay():
             logger.warning("Send email failure")
 
     try:
+        flash("You have successfully add an essay", "success")
         return redirect(url_for("column.show_essay", title="all", page=1))
     except TemplateNotFound:
         logger.error("Template not found")
@@ -151,6 +154,7 @@ def add_essay():
 def update(timestamp):
     # check if log in
     if "logged_in" not in session:
+        flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
 
     form = EssayForm()
@@ -174,7 +178,8 @@ def update(timestamp):
             logger.info("Success update essay")
 
             try:
-                return redirect(url_for("main.manage"))
+                flash("You have successfully update an essay", "success")
+                return redirect(url_for("main.manage", function="column"))
             except TemplateNotFound:
                 logger.error("Template not found")
                 abort(404)
@@ -196,6 +201,7 @@ def update(timestamp):
 def delete(timestamp):
     #check if log in
     if "logged_in" not in session:
+        flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
     
     with app.app_context():
@@ -208,4 +214,5 @@ def delete(timestamp):
         db.commit()
         logger.info("Success delete essay")
 
-        return redirect((url_for('main.manage')))
+        flash("You have successfully delete an essay", "success")
+        return redirect((url_for('main.manage', function="column")))

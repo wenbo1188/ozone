@@ -4,7 +4,7 @@ from jinja2 import TemplateNotFound
 
 from flask import abort
 from flask import current_app as app
-from flask import redirect, render_template, request, session, url_for
+from flask import redirect, render_template, request, session, url_for, flash
 
 from . import main_page
 from ..config import logger
@@ -124,7 +124,10 @@ def login():
             logger.info("Login as {}".format(app.config['USERNAME2']))
         else:
             logger.warning("Wrong username or password: {}, {}".format(username, password))
+            flash("Wrong username or password", "danger")
             return render_template("login.html")
+        
+        flash("You have successfully logged in", "success")
         return redirect(url_for("main.index"))
 
     return render_template("login.html", form=form)
@@ -134,6 +137,7 @@ def logout():
     logger.info("{} has logged out".format(session["logged_user"]))
 
     session.pop("logged_in", None)
+    flash("You have successfully logged out!", "success")
     return redirect(url_for("main.index"))
 
 @main_page.route('/', methods=['GET'])
@@ -147,8 +151,8 @@ def index():
     else:
         return render_template("index.html")
 
-@main_page.route('/manage')
-def manage():
+@main_page.route('/manage/<string:function>', methods=['GET'])
+def manage(function):
     if "logged_in" in session and session["logged_in"] == True:
         with app.app_context():
             db = get_db()
@@ -160,24 +164,44 @@ def manage():
                 logger.error("Invalid username, something goes wrong!!!")
 
             logger.debug("username:{}".format(owner))
-            # get messages
-            try:
-                cur = db.cursor().execute("select timestamp, owner, content from message where owner = ? order by timestamp desc", [owner])
-            except DatabaseError as err:
-                logger.error("Invalid database operation:{}".format(err))
-                abort(404)
-            messages = [dict(timestamp=row[0], owner=row[1], content=row[2]) for row in cur.fetchall()]
-            logger.debug("message:\n{}".format(messages))
 
-            # get essays
-            try:
-                cur = db.cursor().execute("select timestamp, owner, title, content from essay where owner = ? order by timestamp desc", [owner])
-            except DatabaseError as err:
-                logger.error("Invalid database operation:{}".format(err))
+            if function == 'message':
+                # get messages
+                try:
+                    cur = db.cursor().execute("select timestamp, owner, content from message where owner = ? order by timestamp desc", [owner])
+                except DatabaseError as err:
+                    logger.error("Invalid database operation:{}".format(err))
+                    abort(404)
+                messages = [dict(timestamp=row[0], owner=row[1], content=row[2]) for row in cur.fetchall()]
+                logger.debug("message:\n{}".format(messages))
+
+                return render_template("message_manage.html", messages=messages)
+            elif function == 'column':
+                # get essays
+                try:
+                    cur = db.cursor().execute("select timestamp, owner, title, content from essay where owner = ? order by timestamp desc", [owner])
+                except DatabaseError as err:
+                    logger.error("Invalid database operation:{}".format(err))
+                    abort(404)
+                essays = [dict(timestamp=row[0], owner=row[1], title=row[2], content=row[3]) for row in cur.fetchall()]
+                logger.debug("essay:\n{}".format(essays))
+
+                return render_template("column_manage.html", essays = essays)
+                
+            elif function == 'album':
+                # get photos
+                try:
+                    cur = db.cursor().execute("select id, name, album, timestamp from photo order by timestamp desc")
+                except DatabaseError as err:
+                    logger.error("Invalid database operation:{}".format(err))
+                    abort(404)
+                photos = [dict(id=row["id"], name=row["name"], album=row["album"], timestamp=row["timestamp"]) for row in cur.fetchall()]
+                logger.debug("photo:\n{}".format(photos))
+
+                return render_template("photo_manage.html", photos=photos)
+            else:
+                logger.error("Wrong parameter received")
                 abort(404)
-            essays = [dict(timestamp=row[0], owner=row[1], title=row[2], content=row[3]) for row in cur.fetchall()]
-            logger.debug("essay:\n{}".format(essays))
-            
-            return render_template("manage.html", messages=messages, essays=essays)
     else:
+        flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))

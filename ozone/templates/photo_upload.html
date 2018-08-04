@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container">
+    <div class="card">
+        <div class="card-body">
+            <form action="{{ url_for('album.upload') }}" method="post" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+                <input type="file" name="file" multiple="multiple">
+                <button type="submit" class="btn btn-primary float-right">提交</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

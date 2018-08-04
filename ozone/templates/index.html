@@ -3,14 +3,25 @@
 
 <!-- jumptron -->
 <div class="jumbotron jumbotron-fluid">
-	<div class="container" align="center">
-		<h2 class="text-info" style="font-family:arial;font-weight:bold;font-size:60px">Ozone</h2>
+	<div class="container">
+		{% if session.logged_in %}
+		<div class="d-md-flex justify-content-center">
+			<div><a href="" class="avatar"><img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1533310347600&di=cc9fe9c7efeb0dcb89106e2f8ca6770a&imgtype=0&src=http%3A%2F%2Fh.hiphotos.baidu.com%2Fimage%2Fpic%2Fitem%2F267f9e2f07082838304837cfb499a9014d08f1a0.jpg" /></a></div>
+			<div><a href="" class="avatar"><img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1533310347600&di=cc9fe9c7efeb0dcb89106e2f8ca6770a&imgtype=0&src=http%3A%2F%2Fh.hiphotos.baidu.com%2Fimage%2Fpic%2Fitem%2F267f9e2f07082838304837cfb499a9014d08f1a0.jpg" /></a></div>
+			<div><a href="" class="avatar"><img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1533310347600&di=cc9fe9c7efeb0dcb89106e2f8ca6770a&imgtype=0&src=http%3A%2F%2Fh.hiphotos.baidu.com%2Fimage%2Fpic%2Fitem%2F267f9e2f07082838304837cfb499a9014d08f1a0.jpg" /></a></div>
+			<div><a href="" class="avatar"><img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1533310347600&di=cc9fe9c7efeb0dcb89106e2f8ca6770a&imgtype=0&src=http%3A%2F%2Fh.hiphotos.baidu.com%2Fimage%2Fpic%2Fitem%2F267f9e2f07082838304837cfb499a9014d08f1a0.jpg" /></a></div>
+		</div>
 		<br>
-		<div class="text-muted">Our Zone</div>
 		<br>
-		<br>
+		{% endif %}
+		<div class="d-flex justify-content-center">
+			<h2 class="text-dark" style="font-family:arial;font-weight:bold;font-size:60px">Ozone</h2>
+		</div>
+		
 		{% if not session.logged_in %}
-		<p><a role="button" href="{{ url_for("main.login") }}" class="btn btn-success btn-lg">登录</a></p>
+		<div class="d-flex justify-content-center">
+			<p><a role="button" href="{{ url_for("main.login") }}" class="btn btn-success btn-lg">登录</a></p>
+		</div>
 		{% endif %}
 	</div>
 </div>
@@ -23,7 +34,7 @@
 	<div class="row">
 		<div class="col-sm-2"></div>
 		<div class="col-sm-4">
-			<div class="card bg-light text-dark">
+			<div class="card exhibition bg-light text-dark">
 				<div class="card-header">
 					<h3 class="card-title">汪先森最近喜欢的音乐</h3>
 				</div>
@@ -43,7 +54,7 @@
 			</div>
 		</div>
 		<div class="col-sm-4">
-			<div class="card bg-light text-dark">
+			<div class="card exhibition bg-light text-dark">
 				<div class="card-header">
 					<h3 class="card-title">小笨笨最近喜欢的音乐</h3>
 				</div>
@@ -80,7 +91,7 @@
 	<div class="row">
 		<div class="col-sm-2"></div>
 		<div class="col-sm-4">
-			<div class="card">
+			<div class="card exhibition">
 				<div class="card-body">
 					<h1 class="card-title">{{ exhibition[0].title }}</h1>
 					<p class="card-text">{{ exhibition[0].content|striptags|my_truncate(255) }}</p>
@@ -89,7 +100,7 @@
 			</div>
 		</div>
 		<div class="col-sm-4">
-			<div class="card">
+			<div class="card exhibition">
 				<div class="card-body">
 					<h1 class="card-title">{{ exhibition[1].title }}</h1>
 					<p class="card-text">{{ exhibition[1].content|striptags|my_truncate(255) }}</p>
@@ -104,7 +115,7 @@
 	<div class="row">
 		<div class="col-sm-2"></div>
 		<div class="col-sm-4">
-			<div class="card">
+			<div class="card exhibition">
 				<div class="card-body">
 					<h1 class="card-title">{{ exhibition[2].title }}</h1>
 					<p class="card-text">{{ exhibition[2].content|striptags|my_truncate(255) }}</p>
@@ -113,7 +124,7 @@
 			</div>
 		</div>
 		<div class="col-sm-4">
-			<div class="card">
+			<div class="card exhibition">
 				<div class="card-body">
 					<h1 class="card-title">{{ exhibition[3].title }}</h1>
 					<p class="card-text">{{ exhibition[3].content|striptags|my_truncate(255) }}</p>

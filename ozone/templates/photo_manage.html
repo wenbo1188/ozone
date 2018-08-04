@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container">
+    <div class="table-responsive-md">
+        <table class="table table-sm table-hover" style="word-break:break-all; word-wrap:break-all;">
+            <thead>
+                <tr class="row mx-0">
+                    <th class="col-3">
+                        <h4>ID</h4>
+                    </th>
+                    <th class="col-4">
+                        <h4>名称</h4>
+                    </th>
+                    <th class="col-2">
+                        <h4>相册</h4>
+                    </th>
+                    <th class="col-2">
+                        <h4>时间</h4>
+                    </th>
+                    <th class="col-1">
+                        <h4>操作</h4>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for photo in photos %}
+                    <tr class="row mx-0">
+                        <td class="col-3">
+                            <h6>{{ photo.id|my_truncate(16) }}</h6>
+                        </td>
+                        <td class="col-4">
+                            <h6>{{ photo.name|my_truncate(40) }}</h6>
+                        </td>
+                        <td class="col-2">
+                            <h6>{{ photo.album }}</h6>
+                        </td>
+                        <td class="col-2">
+                            <h6>{{ photo.timestamp|my_timefmt }}</h6>
+                        </td>
+                        <td class="col-1">
+                            <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#myModal_{{ photo.id }}">删除</button>
+                            <div class="modal fade" id="myModal_{{ photo.id }}">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <!-- 模态框头部 -->
+                                        <div class="modal-header">
+                                            <div class="d-flex justify-content-center">
+                                                <h3>NOTICE</h3>
+                                            </div>
+                                        </div>
+                                
+                                        <!-- 模态框主体 -->
+                                        <div class="modal-body">
+                                            <div class="d-flex justify-content-center">
+                                                <h4>删除后无法恢复，请谨慎操作</h4>
+                                            </div>
+                                            <div class="d-flex justify-content-around">
+                                                <a href="{{ url_for('album.delete', photo_id=photo.id) }}" class="btn btn-lg btn-danger" role="button">确认删除</a>
+                                                <button type="button" class="btn btn-lg btn-primary" data-dismiss="modal">不，手抖按错了</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="container">
+    <a href="{{ url_for('album.upload') }}" class="btn btn-lg btn-primary" role="button">upload_photo</a>
+</div>
+{% endblock %}

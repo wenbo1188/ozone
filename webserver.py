@@ -18,4 +18,7 @@ if __name__ == '__main__':
     app = create_app(ProdConfig)
     song_thread = threading.Thread(target=songs_rank_thread)
     song_thread.start()
-    webserver_thread(app)
+    if app.config['DEBUG']:
+        app.run(debug=True)
+    else:
+        webserver_thread(app)

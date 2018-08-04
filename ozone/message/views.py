@@ -5,7 +5,7 @@ from jinja2 import TemplateNotFound
 
 from flask import abort
 from flask import current_app as app
-from flask import g, redirect, render_template, request, session, url_for
+from flask import g, redirect, render_template, request, session, url_for, flash
 
 from . import message_page
 from ..config import logger
@@ -16,6 +16,7 @@ from ..utils.form_util import MessageForm
 @message_page.route('/<int:page>')
 def show_message(page=1):
     if "logged_in" not in session:
+        flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
 
     with app.app_context():
@@ -64,6 +65,7 @@ def add_message():
 
     # check if log in
     if "logged_in" not in session:
+        flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
 
     if form.validate_on_submit():
@@ -103,6 +105,7 @@ def add_message():
                 logger.warning("Send email failure")
 
             try:
+                flash("You have successfully leave a message", "success")
                 return redirect(url_for("message.show_message", page=1))
             except TemplateNotFound:
                 logger.error("Template not found")
@@ -114,6 +117,7 @@ def add_message():
 def update(timestamp):
     # check if log in
     if "logged_in" not in session:
+        flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
 
     form = MessageForm()
@@ -136,7 +140,8 @@ def update(timestamp):
             logger.info("Success update message")
 
             try:
-                return redirect(url_for("main.manage"))
+                flash("You have successfully udpate a message", "success")
+                return redirect(url_for("main.manage", function="message"))
             except TemplateNotFound:
                 logger.error("Template not found")
                 abort(404)
@@ -157,6 +162,7 @@ def update(timestamp):
 def delete(timestamp):
     #check if log in
     if "logged_in" not in session:
+        flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
     
     with app.app_context():
@@ -169,4 +175,5 @@ def delete(timestamp):
         db.commit()
         logger.info("Success delete message")
 
-        return redirect((url_for('main.manage')))
+        flash("You have successfully delete a message", "success")
+        return redirect((url_for('main.manage', function="message")))

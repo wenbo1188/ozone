@@ -4,8 +4,10 @@ from flask import current_app
 from .main import main_page
 from .message import message_page
 from .column import column_page
+from .album import album_page
 from .utils.db_util import get_db
 import time
+from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
 
 def danger_str_filter(string_to_filter : str):
     '''
@@ -23,7 +25,10 @@ def my_truncate(string_to_filter : str, length=255, end="..."):
     Truncate strings to the given length
     '''
 
-    result = "{}{}".format(string_to_filter[:length], end)
+    if len(string_to_filter) > length:
+        result = "{}{}".format(string_to_filter[:length], end)
+    else:
+        result = string_to_filter
     return result
 
 def my_timefmt(string_to_filter : str):
@@ -56,6 +61,8 @@ def init_db():
         except:
             logger.error("Fail to init db")
 
+photos = UploadSet('photos', IMAGES)
+
 def create_app(config):
     '''Initializing app'''
 
@@ -64,6 +71,7 @@ def create_app(config):
     app.register_blueprint(main_page)
     app.register_blueprint(message_page, url_prefix="/message")
     app.register_blueprint(column_page, url_prefix="/column")
+    app.register_blueprint(album_page, url_prefix="/album")
     with app.app_context():
         register_filter()
         init_db()
@@ -73,5 +81,8 @@ def create_app(config):
             if hasattr(g, 'sqlite_db'):
                 logger.info("Closing database...")
                 g.sqlite_db.close()
+
+    configure_uploads(app, photos)
+    patch_request_class(app) # default max file size 64M
 
     return app
