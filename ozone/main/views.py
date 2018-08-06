@@ -1,4 +1,5 @@
 import time
+import os
 
 from jinja2 import TemplateNotFound
 
@@ -26,64 +27,74 @@ def get_playlist_info() -> tuple:
     filepath1 = "{}/{}.txt".format(app.config["PLAYLIST_PATH"], app.config["USERNAME1"])
     filepath2 = "{}/{}.txt".format(app.config["PLAYLIST_PATH"], app.config["USERNAME2"])
 
-    with open(filepath1, 'r') as file1:
-        try:
-            line = file1.readline()
-        except:
-            logger.error("Fail to read oneline")
-
-        while line:
-            name = line.strip('\n')
-            song = []
-            song.append(name)
-            try:
-                line = file1.readline()
-            except:
-                logger.error("Fail to read oneline")
-            id = line.strip('\n')
-            song.append(id)
-            try:
-                line = file1.readline()
-            except:
-                logger.error("Fail to read oneline")
-            url = line.strip('\n')
-            song.append(url)
-            playlist1.append(song)
+    if os.path.exists(filepath1) and os.path.isfile(filepath1) and os.path.exists(filepath2) and os.path.isfile(filepath2):
+        # path exists
+        with open(filepath1, 'r') as file1:
             try:
                 line = file1.readline()
             except:
                 logger.error("Fail to read oneline")
 
-    with open(filepath2, 'r') as file2:
-        try:
-            line = file2.readline()
-        except:
-            logger.error("Fail to read oneline")
+            while line:
+                name = line.strip('\n')
+                song = []
+                song.append(name)
+                try:
+                    line = file1.readline()
+                except:
+                    logger.error("Fail to read oneline")
+                id = line.strip('\n')
+                song.append(id)
+                try:
+                    line = file1.readline()
+                except:
+                    logger.error("Fail to read oneline")
+                url = line.strip('\n')
+                song.append(url)
+                playlist1.append(song)
+                try:
+                    line = file1.readline()
+                except:
+                    logger.error("Fail to read oneline")
 
-        while line:
-            name = line.strip('\n')
-            song = []
-            song.append(name)
-            try:
-                line = file2.readline()
-            except:
-                logger.error("Fail to read oneline")
-            id = line.strip('\n')
-            song.append(id)
-            try:
-                line = file2.readline()
-            except:
-                logger.error("Fail to read oneline")
-            url = line.strip('\n')
-            song.append(url)
-            playlist2.append(song)
+        with open(filepath2, 'r') as file2:
             try:
                 line = file2.readline()
             except:
                 logger.error("Fail to read oneline")
 
-    file1.close()
-    file2.close()
+            while line:
+                name = line.strip('\n')
+                song = []
+                song.append(name)
+                try:
+                    line = file2.readline()
+                except:
+                    logger.error("Fail to read oneline")
+                id = line.strip('\n')
+                song.append(id)
+                try:
+                    line = file2.readline()
+                except:
+                    logger.error("Fail to read oneline")
+                url = line.strip('\n')
+                song.append(url)
+                playlist2.append(song)
+                try:
+                    line = file2.readline()
+                except:
+                    logger.error("Fail to read oneline")
+
+        file1.close()
+        file2.close()
+    else:
+        # path not exists
+        create_files_command = "touch {} && touch {}".format(filepath1, filepath2)
+        err_code = os.system(create_files_command)
+        if err_code != 0:
+            logger.error("Fail to create file path: {} and {}".format(filepath1, filepath2))
+        else:
+            logger.info("Success create file path: {} and {}".format(filepath1, filepath2))
 
     logger.debug("\nplaylist1: {}\nplaylist2: {}".format(playlist1, playlist2))
 
@@ -125,7 +136,7 @@ def login():
         else:
             logger.warning("Wrong username or password: {}, {}".format(username, password))
             flash("Wrong username or password", "danger")
-            return render_template("login.html")
+            return render_template("login.html", form=form)
         
         flash("You have successfully logged in", "success")
         return redirect(url_for("main.index"))
