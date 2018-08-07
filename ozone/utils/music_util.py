@@ -10,7 +10,7 @@ from codecs import encode
 import urllib.request as ur
 import urllib.error as ue
 import urllib.parse as up
-from ..config import ProdConfig, logger
+from ..config import logger
 
 warnings.filterwarnings("ignore")
 
@@ -82,37 +82,42 @@ def songs_change(tracks : dict, res_path : str) -> bool:
     '''
 
     num_of_line = 0
-    with open(res_path, 'r') as f:
-        try:
-            line = f.readline()
-            num_of_line += 1
-        except:
-            logger.error("Fail to read oneline")
-
-        while line:
-            if (num_of_line % 3) == 2:
-                #deal with the line
-                id = int(line.strip('\n'))
-                if id not in [tracks[i]["id"] for i in range(TOP_NUM)]:
-                    f.close()
-                    return True
-
+    if os.path.exists(res_path) and os.path.isfile(res_path):
+        # path exists
+        with open(res_path, 'r') as f:
             try:
                 line = f.readline()
                 num_of_line += 1
             except:
                 logger.error("Fail to read oneline")
 
-    f.close()
+            while line:
+                if (num_of_line % 3) == 2:
+                    #deal with the line
+                    id = int(line.strip('\n'))
+                    if id not in [tracks[i]["id"] for i in range(TOP_NUM)]:
+                        f.close()
+                        return True
+
+                try:
+                    line = f.readline()
+                    num_of_line += 1
+                except:
+                    logger.error("Fail to read oneline")
+
+        f.close()
+    else:
+        return True
+        
     return False
 
-def get_songs_rank(user_id : str, name : str) -> None:
+def get_songs_rank(user_id : str, name : str, playlist_path : str, songs_path : str) -> None:
     '''
     Get songs rank from api and save result to certain txt
     '''
 
     url = URL_BASE + user_id
-    res_path = "{}/{}.txt".format(ProdConfig.PLAYLIST_PATH, name)
+    res_path = "{}/{}.txt".format(playlist_path, name)
 
     req = ur.Request(url)
     req.add_header("User-Agent","Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36)")
@@ -141,14 +146,14 @@ def get_songs_rank(user_id : str, name : str) -> None:
 
         # Download the song and convert MP3 to OGG
         for i in range(len(playlist)):
-            download_command = "wget -nc -O {path}/{id}.mp3 {url}".format(path=ProdConfig.SONGS_PATH, id=playlist[i]["id"], url=playlist[i]["url"])
+            download_command = "wget -nc -O {path}/{id}.mp3 {url}".format(path=songs_path, id=playlist[i]["id"], url=playlist[i]["url"])
             err_code = os.system(download_command)
             if (err_code != 0):
                 logger.warning("Fail to download or the file already exists")
             else:
                 logger.info("Success download")
             
-            convert_command = "ffmpeg -i {path}/{id}.mp3 -c:a libvorbis -n {path}/{id}.ogg 1>/dev/null 2>&1".format(path=ProdConfig.SONGS_PATH, id=playlist[i]["id"])
+            convert_command = "ffmpeg -i {path}/{id}.mp3 -c:a libvorbis -n {path}/{id}.ogg 1>/dev/null 2>&1".format(path=songs_path, id=playlist[i]["id"])
             err_code = os.system(convert_command)
             if (err_code != 0):
                 logger.warning("Fail to convert mp3 to ogg or the file already exists")
@@ -169,24 +174,36 @@ def get_songs_rank(user_id : str, name : str) -> None:
 
     return
 
-def clear_old_song():
+def clear_old_song(songs_path, platform):
     '''
     Clear the old song which is too old
     '''
 
-    clear_command = "find {} -mtime +{} | xargs rm -f".format(ProdConfig.SONGS_PATH, CLEAR_INTERVAL)
-    err_code = os.system(clear_command)
-    if (err_code != 0):
-        logger.info("No old songs deleted")
+    if platform == "windows":
+        for file in os.listdir(songs_path):
+            if file != ".gitkeep":
+                mtime = int(os.path.getmtime("{}/{}".format(songs_path, file)))
+                if time.time() - mtime >= CLEAR_INTERVAL * 86400:
+                    logger.debug("last modified time: {} {}".format(file, mtime))
+                    try:
+                        os.remove("{}/{}".format(songs_path, file))
+                        logger.info("Success clear old songs")
+                    except:
+                        logger.info("No old songs deleted")
     else:
-        logger.info("Success clear old songs")
-    
+        clear_command = "find {} -mtime +{} | xargs rm -f".format(songs_path, CLEAR_INTERVAL)
+        err_code = os.system(clear_command)
+        if (err_code != 0):
+            logger.info("No old songs deleted")
+        else:
+            logger.info("Success clear old songs")
+
     return
 
-def query_loop() -> None:
+def query_loop(config) -> None:
     while (1):
-        clear_old_song()
-        get_songs_rank(ProdConfig.USER1_PLAYLIST_ID, ProdConfig.USERNAME1)
-        get_songs_rank(ProdConfig.USER2_PLAYLIST_ID, ProdConfig.USERNAME2)
+        clear_old_song(config.SONGS_PATH, config.PLATFORM)
+        get_songs_rank(config.USER1_PLAYLIST_ID, config.USERNAME1, config.PLAYLIST_PATH, config.SONGS_PATH)
+        get_songs_rank(config.USER2_PLAYLIST_ID, config.USERNAME2, config.PLAYLIST_PATH, config.SONGS_PATH)
         logger.info("Wake up in {} seconds".format(QUERY_INTERVAL))
         time.sleep(QUERY_INTERVAL)
