@@ -53,3 +53,25 @@ def test_login_incorrect(client):
     })
     assertTrue_status(rv, 200)
     assertTrue_content(rv, "Wrong username or password")
+
+def test_logout(client):
+    # logout without login first
+    rv = client.get('/logout', follow_redirects=True)
+    assertTrue_status(rv, 200)
+    assertTrue_content(rv, "You have not logged in yet")
+
+    # login first
+    rv = client.post('/login', data={
+        'username':TestConfig.USERNAME1,
+        'password':TestConfig.PASSWORD
+    })
+    rv = client.get('/logout', follow_redirects=True)
+    assertTrue_status(rv, 200)
+    assertTrue_content(rv, "You have successfully logged out")
+
+def test_manage_message(client):
+    # visit without login
+    rv = client.get('/manage/message', follow_redirects=True)
+    assertTrue_status(rv, 200)
+    assertTrue_content(rv, "You need login to continue")
+    assertFalse_content(rv, "操作")

@@ -22,7 +22,8 @@ def client():
 
     os.close(db_fd)
     os.unlink(TestConfig.DATABASE)
-    os.system("rm -rf {}".format(common_path))
+    # os.system("rm -rf {}".format(common_path))
+    os.removedirs(common_path)
 
 def assertTrue_status(response, status_code):
     assert response.status_code == status_code
@@ -39,5 +40,6 @@ def assertFalse_content(response, content):
 def prepare_resource(func):
     def wrapper(client):
         # do resource prepare here
+        
         func(client)
     return wrapper

@@ -145,6 +145,10 @@ def login():
 
 @main_page.route('/logout')
 def logout():
+    if "logged_user" not in session:
+        flash("You have not logged in yet!", "warning")
+        return redirect(url_for("main.index"))
+    
     logger.info("{} has logged out".format(session["logged_user"]))
 
     session.pop("logged_in", None)
