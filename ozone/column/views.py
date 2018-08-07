@@ -97,58 +97,62 @@ def show_essay(title, page=1):
             logger.error("Template not found")
             abort(404)
 
-@column_page.route('/add', methods=['POST'])
+@column_page.route('/add', methods=['GET', 'POST'])
 def add_essay():
     owner = None
+    form = EssayForm()
 
     # check if log in
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
 
-    # start add message
-    with app.app_context():
-        db = get_db()
-        timestamp = int(time.time())
-        if session["logged_user"] == "wang":
-            owner = "汪先森"
-        elif session["logged_user"] == "miao":
-            owner = "小笨笨"
-        else:
-            logger.error("Invalid username, something goes wrong!!!")
+    if form.validate_on_submit():
+        # start add message
+        with app.app_context():
+            db = get_db()
+            timestamp = int(time.time())
+            if session["logged_user"] == "wang":
+                owner = "汪先森"
+            elif session["logged_user"] == "miao":
+                owner = "小笨笨"
+            else:
+                logger.error("Invalid username, something goes wrong!!!")
 
-        logger.debug("Added title is:\n{}\nContent is:\n{}".format(request.form["title"], request.form["content"]))
+            logger.debug("Added title is:\n{}\nContent is:\n{}".format(request.form["title"], request.form["content"]))
+
+            try:
+                db.cursor().execute("insert into essay (timestamp, owner, title, content, user1_read, user2_read) values (?, ?, ?, ?, 0, 0)", [timestamp, owner, request.form["title"], request.form["content"]])
+            except sqlite3.DatabaseError as err:
+                logger.error("Invalid database operation:{}".format(err))
+                abort(404)
+            db.commit()
+
+            # email reminder
+            if (owner == "汪先森"):
+                receiver = app.config['USER2_MAILADDRESS']
+                receiver_name = app.config['USERNAME2']
+            elif (owner == "小笨笨"):
+                receiver = app.config['USER1_MAILADDRESS']
+                receiver_name = app.config['USERNAME1']
+            else:
+                logger.error("Invalid username, something goes wrong!!!")
+            message_content = "An essay has been updated, go and have a look~"
+
+            reminder = EmailReminder(app.config['MAIL_SERVER'], app.config['MAIL_PORT'], app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'], False, logger)
+            try:
+                reminder.send(receiver, receiver_name, message_content)
+            except:
+                logger.warning("Send email failure")
 
         try:
-            db.cursor().execute("insert into essay (timestamp, owner, title, content, user1_read, user2_read) values (?, ?, ?, ?, 0, 0)", [timestamp, owner, request.form["title"], request.form["content"]])
-        except sqlite3.DatabaseError as err:
-            logger.error("Invalid database operation:{}".format(err))
+            flash("You have successfully add an essay", "success")
+            return redirect(url_for("column.show_essay", title="all", page=1))
+        except TemplateNotFound:
+            logger.error("Template not found")
             abort(404)
-        db.commit()
-
-        # email reminder
-        if (owner == "汪先森"):
-            receiver = app.config['USER2_MAILADDRESS']
-            receiver_name = app.config['USERNAME2']
-        elif (owner == "小笨笨"):
-            receiver = app.config['USER1_MAILADDRESS']
-            receiver_name = app.config['USERNAME1']
-        else:
-            logger.error("Invalid username, something goes wrong!!!")
-        message_content = "An essay has been updated, go and have a look~"
-
-        reminder = EmailReminder(app.config['MAIL_SERVER'], app.config['MAIL_PORT'], app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'], False, logger)
-        try:
-            reminder.send(receiver, receiver_name, message_content)
-        except:
-            logger.warning("Send email failure")
-
-    try:
-        flash("You have successfully add an essay", "success")
-        return redirect(url_for("column.show_essay", title="all", page=1))
-    except TemplateNotFound:
-        logger.error("Template not found")
-        abort(404)
+    else:
+        return render_template("add_essay.html", form=form)
 
 @column_page.route('/update/<int:timestamp>', methods=['GET', 'POST'])
 def update(timestamp):

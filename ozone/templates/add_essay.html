@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container-fluid">
+    <form action="{{ url_for('column.add_essay') }}" method="post" class="add-essay">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            <input type="text" id="title" name="title" class="form-control" placeholder="#title">
+            <br>
+            <textarea class="form-control" id="content" name="content"></textarea>
+            <br>
+        </div>
+        <div class="float-right">
+            <button type="submit" class="btn btn-primary">提交</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
