@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container">
+    <div class="card">
+        <h2 class="card-title">新建相册</h2>
+        <div class="card-body">
+            <form action="{{ url_for('album.add_album') }}" method="POST">
+                {{ form.hidden_tag() }}
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">名称</span>
+                    </div>
+                    <input type="text" class="form-control" id="title" name="title" placeholder="name">
+                </div>
+                     
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">描述</span>
+                    </div>
+                    <input type="text" class="form-control" id="title" name="about" placeholder="可不填">
+                </div>
+
+                <div class="mx-auto">
+                    <button type="submit" class="btn btn-primary btn-lg">提交</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

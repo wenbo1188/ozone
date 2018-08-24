@@ -13,7 +13,6 @@ from ..utils.db_util import get_db
 from ..utils.form_util import LoginForm
 from sqlite3 import DatabaseError
 
-
 def get_playlist_info() -> tuple:
     '''
     get playlist info from file under folder: ../songs_rank/
@@ -110,11 +109,30 @@ def get_exhibition_essay() -> list:
     with app.app_context():
         db = get_db()
         try:
-            cur = db.cursor().execute("select timestamp, owner, title, content from essay order by timestamp desc limit ?", [exhibition_num])
+            cur = db.cursor().execute("select timestamp, owner, title, content from essay order by timestamp desc limit ?", [exhibition_num,])
         except DatabaseError as err:
             logger.error("Invalid database operation:{}".format(err))
             return []
         exhibition = [dict(timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(row[0])), owner=row[1], title=row[2], content=row[3], collapse_id=row[0]) for row in cur.fetchall()]
+
+    return exhibition
+
+def get_exhibition_photo() -> list:
+    '''
+    Get photo for exhibition in index.html
+    '''
+
+    from .. import photos
+    exhibition_num = 4
+
+    with app.app_context():
+        db = get_db()
+        try:
+            cur = db.cursor().execute("select distinct name from photo where exhibition = 1 order by last_chosen_time limit ?", [exhibition_num,])
+        except DatabaseError as err:
+            logger.error("Invalid database operation:{}".format(err))
+            return []
+        exhibition = [dict(url=photos.url(row["name"])) for row in cur.fetchall()]
 
     return exhibition
 
@@ -152,17 +170,19 @@ def logout():
     logger.info("{} has logged out".format(session["logged_user"]))
 
     session.pop("logged_in", None)
+    session.pop("logged_user", None)
     flash("You have successfully logged out!", "success")
     return redirect(url_for("main.index"))
 
 @main_page.route('/', methods=['GET'])
 def index():
-    logger.info("Index.html visited")
-
     if "logged_in" in session and session["logged_in"] == True:
         list1, list2 = get_playlist_info() #to be removed
         exhibition = get_exhibition_essay()
-        return render_template("index.html", playlist1=list1, playlist2=list2, exhibition=exhibition)
+        photo_exhibition = get_exhibition_photo()
+        logger.info("Index.html visited")
+        logger.debug("photo_exhibition: {}".format(photo_exhibition))
+        return render_template("index.html", playlist1=list1, playlist2=list2, exhibition=exhibition, photo_exhibition=photo_exhibition)
     else:
         return render_template("index.html")
 
@@ -210,10 +230,21 @@ def manage(function):
                 except DatabaseError as err:
                     logger.error("Invalid database operation:{}".format(err))
                     abort(404)
-                photos = [dict(id=row["id"], name=row["name"], album=row["album"], timestamp=row["timestamp"]) for row in cur.fetchall()]
-                logger.debug("photo:\n{}".format(photos))
+                photos = [dict(id=row["id"], name=row["name"], album=row["album"], timestamp=row["timestamp"]) 
+                        for row in cur.fetchall()]
+                logger.debug("photos:\n{}".format(photos))
 
-                return render_template("photo_manage.html", photos=photos)
+                # get albums
+                try:
+                    cur = db.cursor().execute("select id, title, about, cover, timestamp from album order by timestamp desc")
+                except DatabaseError as err:
+                    logger.error("Invalid database operation:{}".format(err))
+                    abort(404)
+                albums = [dict(id=row["id"], title=row["title"], about=row["about"], cover=row["cover"], timestamp=row["timestamp"])
+                        for row in cur.fetchall()]
+                logger.debug("albums:\n{}".format(albums))
+
+                return render_template("photo_manage.html", photos=photos, albums=albums)
             else:
                 logger.error("Wrong parameter received")
                 abort(404)

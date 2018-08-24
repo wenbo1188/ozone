@@ -16,8 +16,8 @@ create table if not exists essay(
 create table if not exists album(
 	id string primary key not null,
 	title string(50) not null,
-	about string,
-	cover string,
+	about string default null,
+	cover string default null,
 	timestamp integer not null
 );
 
@@ -25,5 +25,7 @@ create table if not exists photo(
 	id string primary key not null,
 	name string(100) not null,
 	album string,
-	timestamp integer not null
+	timestamp integer not null,
+	exhibition integer default 0,
+	last_chosen_time integer default 0
 );

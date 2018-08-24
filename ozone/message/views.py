@@ -15,6 +15,7 @@ from ..utils.form_util import MessageForm
 
 @message_page.route('/<int:page>')
 def show_message(page=1):
+    # check if login
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
@@ -39,10 +40,11 @@ def show_message(page=1):
         
         if ((page - 1) * num_per_page >= num):
             logger.warning("Illegal page number: {}".format(page))
+            flash("再翻也没有啦!", "primary")
             page = max_page
-
-        if (page <= 0):
+        elif (page <= 0):
             logger.warning("Illegal page number: {}".format(page))
+            flash("再翻也没有啦!", "primary")
             page = 1
 
         try:
@@ -60,13 +62,13 @@ def show_message(page=1):
 
 @message_page.route('/add', methods=['GET', 'POST'])
 def add_message():
-    owner = None
-    form = MessageForm()
-
     # check if log in
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
+
+    owner = None
+    form = MessageForm()
 
     if form.validate_on_submit():
         content = form.content.data
@@ -98,24 +100,26 @@ def add_message():
                 logger.error("Invalid username, something goes wrong!!!")
 
             message_content = "A new message for you, go and have a look~"
-            reminder = EmailReminder(app.config['MAIL_SERVER'], app.config['MAIL_PORT'], app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'], False, logger)
-            try:
-                reminder.send(receiver, receiver_name, message_content)
-            except:
-                logger.warning("Send email failure")
 
-            try:
-                flash("You have successfully leave a message", "success")
-                return redirect(url_for("message.show_message", page=1))
-            except TemplateNotFound:
-                logger.error("Template not found")
-                abort(404)
+            if app.config['ENABLE_EMAIL_REMINDER']:
+                try:
+                    reminder = EmailReminder(app.config['MAIL_SERVER'], app.config['MAIL_PORT'], app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'], False, logger)
+                    reminder.send(receiver, receiver_name, message_content)
+                except:
+                    logger.warning("Send email failure")
+
+        try:
+            flash("You have successfully leave a message", "success")
+            return redirect(url_for("message.show_message", page=1))
+        except TemplateNotFound:
+            logger.error("Template not found")
+            abort(404)
     else:
         return render_template('add_message.html', form=form)
 
 @message_page.route('/update/<int:timestamp>', methods=['GET', 'POST'])
 def update(timestamp):
-    # check if log in
+    # check if login
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
@@ -153,27 +157,36 @@ def update(timestamp):
             except sqlite3.DatabaseError as err:
                 logger.error("Invalid database operation:{}".format(err))
                 abort(404)
-            old_message = dict(content=cur.fetchone()[0])
-            logger.debug("{}".format(old_message))
+            try:
+                old_message = dict(content=cur.fetchone()[0])
+                logger.debug("{}".format(old_message))
+            except TypeError as err:
+                logger.error("No message found specified by request: {}".format(err))
+                abort(404)
         
             return render_template("update.html", form=form, old_message=old_message, timestamp=timestamp)
 
 @message_page.route('/delete/<int:timestamp>', methods=['GET'])
 def delete(timestamp):
-    #check if log in
+    # check if log in
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
     
     with app.app_context():
         db = get_db()
-        try:
-            db.cursor().execute("delete from message where timestamp = ?", [timestamp])
-        except sqlite3.DatabaseError as err:
-            logger.error("Invalid database operation:{}".format(err))
+        # check if the timestamp is valid
+        if db.cursor().execute("select * from message where timestamp = ?", [timestamp,]).fetchone() is not None:
+            try:
+                db.cursor().execute("delete from message where timestamp = ?", [timestamp,])
+            except sqlite3.DatabaseError as err:
+                logger.error("Invalid database operation:{}".format(err))
+                abort(404)
+            db.commit()
+            logger.info("Success delete message")
+        else:
+            logger.error("No message found specified by request")
             abort(404)
-        db.commit()
-        logger.info("Success delete message")
 
         flash("You have successfully delete a message", "success")
         return redirect((url_for('main.manage', function="message")))

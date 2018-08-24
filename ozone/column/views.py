@@ -15,6 +15,7 @@ from ..utils.form_util import EssayForm
 
 @column_page.route('/<title>/<int:page>')
 def show_essay(title, page=1):
+    # check if login
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
@@ -49,10 +50,11 @@ def show_essay(title, page=1):
 
             if ((page - 1) * num_per_page >= num):
                 logger.warning("Illegal page number: {}".format(page))
+                flash("再翻也没有啦!", "primary")
                 page = max_page
-
-            if (page <= 0):
+            elif (page <= 0):
                 logger.warning("Illegal page number: {}".format(page))
+                flash("再翻也没有啦!", "primary")
                 page = 1
 
             try:
@@ -78,10 +80,11 @@ def show_essay(title, page=1):
 
             if ((page - 1) * num_per_page >= num):
                 logger.warning("Illegal page number: {}".format(page))
+                flash("再翻也没有啦!", "primary")
                 page = max_page
-
-            if (page <= 0):
+            elif (page <= 0):
                 logger.warning("Illegal page number: {}".format(page))
+                flash("再翻也没有啦!", "primary")
                 page = 1
 
             try:
@@ -99,27 +102,29 @@ def show_essay(title, page=1):
 
 @column_page.route('/add', methods=['GET', 'POST'])
 def add_essay():
-    owner = None
-    form = EssayForm()
-
-    # check if log in
+    # check if login
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
+
+    owner = None
+    form = EssayForm()
 
     if form.validate_on_submit():
         # start add message
         with app.app_context():
             db = get_db()
             timestamp = int(time.time())
-            if session["logged_user"] == "wang":
+            title = form.title.data
+            content = form.content.data
+            if session["logged_user"] == app.config['USERNAME1']:
                 owner = "汪先森"
-            elif session["logged_user"] == "miao":
+            elif session["logged_user"] == app.config['USERNAME2']:
                 owner = "小笨笨"
             else:
                 logger.error("Invalid username, something goes wrong!!!")
 
-            logger.debug("Added title is:\n{}\nContent is:\n{}".format(request.form["title"], request.form["content"]))
+            logger.debug("Added title is:\n{}\nContent is:\n{}".format(title, content))
 
             try:
                 db.cursor().execute("insert into essay (timestamp, owner, title, content, user1_read, user2_read) values (?, ?, ?, ?, 0, 0)", [timestamp, owner, request.form["title"], request.form["content"]])
@@ -139,11 +144,12 @@ def add_essay():
                 logger.error("Invalid username, something goes wrong!!!")
             message_content = "An essay has been updated, go and have a look~"
 
-            reminder = EmailReminder(app.config['MAIL_SERVER'], app.config['MAIL_PORT'], app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'], False, logger)
-            try:
-                reminder.send(receiver, receiver_name, message_content)
-            except:
-                logger.warning("Send email failure")
+            if app.config['ENABLE_EMAIL_REMINDER']:
+                try:
+                    reminder = EmailReminder(app.config['MAIL_SERVER'], app.config['MAIL_PORT'], app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'], False, logger)
+                    reminder.send(receiver, receiver_name, message_content)
+                except:
+                    logger.warning("Send email failure")
 
         try:
             flash("You have successfully add an essay", "success")
@@ -156,7 +162,7 @@ def add_essay():
 
 @column_page.route('/update/<int:timestamp>', methods=['GET', 'POST'])
 def update(timestamp):
-    # check if log in
+    # check if login
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
@@ -196,27 +202,36 @@ def update(timestamp):
                 logger.error("Invalid database operation:{}".format(err))
                 abort(404)
             result = cur.fetchone()
-            old_essay = dict(title=result[0], content=result[1])
-            logger.debug("{}".format(old_essay))
+            try:
+                old_essay = dict(title=result[0], content=result[1])
+                logger.debug("{}".format(old_essay))
+            except TypeError as err:
+                logger.error("No essay found specified by request")
+                abort(404)
         
             return render_template("update.html", form=form, old_essay=old_essay, timestamp=timestamp)
 
 @column_page.route('/delete/<int:timestamp>', methods=['GET'])
 def delete(timestamp):
-    #check if log in
+    # check if login
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
     
     with app.app_context():
         db = get_db()
-        try:
-            db.cursor().execute("delete from essay where timestamp = ?", [timestamp])
-        except sqlite3.DatabaseError as err:
-            logger.error("Invalid database operation:{}".format(err))
+        # check if the timestamp is valid
+        if db.cursor().execute("select * from essay where timestamp = ?", [timestamp,]).fetchone() is not None:
+            try:
+                db.cursor().execute("delete from essay where timestamp = ?", [timestamp])
+            except sqlite3.DatabaseError as err:
+                logger.error("Invalid database operation:{}".format(err))
+                abort(404)
+            db.commit()
+            logger.info("Success delete essay")
+        else:
+            logger.error("No essay found specified by request")
             abort(404)
-        db.commit()
-        logger.info("Success delete essay")
 
         flash("You have successfully delete an essay", "success")
         return redirect((url_for('main.manage', function="column")))
