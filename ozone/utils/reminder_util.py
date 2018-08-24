@@ -9,7 +9,12 @@ class EmailReminder:
     '''
 
     def __init__(self, mail_server, mail_port, mail_username, mail_password, debug_mode = False, logger = None):
-        self.smtpserver = smtplib.SMTP_SSL(mail_server, mail_port)
+        try:
+            self.smtpserver = smtplib.SMTP_SSL(mail_server, mail_port)
+        except smtplib.SMTPConnectError as err:
+            self.smtpserver = None
+            if logger != None:
+                logger.error("{}".format(err))
         self.mail_server = mail_server
         self.mail_port = mail_port
         self.mail_username = mail_username
@@ -42,4 +47,5 @@ class EmailReminder:
         except (smtplib.SMTPAuthenticationError, smtplib.SMTPSenderRefused) as err:
             self.logger.error("Fail to send email:\n{}".format(err))
         finally:
-            self.smtpserver.quit() 
+            if self.smtpserver != None:
+                self.smtpserver.quit() 

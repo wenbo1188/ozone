@@ -6,26 +6,26 @@
 			<a href="{{ url_for('column.add_essay') }}" role="button" class="btn btn-lg btn-primary">新建专栏</a>
 			{% for essay in essays %}
 			{% if essay.owner == "汪先森" %}
-			<div class="card bg-secondary text-white">
+			<div class="card">
 				<div id="{{ essay.collapse_id }}">
 					<div class="card-body">
 						<h1 class="card-title">{{ essay.title }}</h4>
 						{{ essay.content|safe|my_str_filter }}
 					</div>
 				</div>
-				<div class="card-footer text-right">
+				<div class="card-footer text-right" style="background:linear-gradient(to right, rgba(135, 206, 250, 1), rgba(135, 206, 250, 0.6));">
 					{{ essay.timestamp }} by {{ essay.owner }}
 				</div>
 			</div>
 			{% elif essay.owner == "小笨笨" %}
-			<div class="card bg-light text-dark">
+			<div class="card">
 				<div id="{{ essay.collapse_id }}">
 					<div class="card-body">
 						<h1 class="card-title">{{ essay.title }}</h4>
 						{{ essay.content|safe|my_str_filter }}
 					</div>
 				</div>
-				<div class="card-footer text-right">
+				<div class="card-footer text-right" style="background: linear-gradient(to right, rgba(255, 192, 203, 1), rgba(255, 192, 203, 0.6));">
 					{{ essay.timestamp }} by {{ essay.owner }}
 				</div>
 			</div>
@@ -37,7 +37,7 @@
 
 				<!--pagination-->
 				<div class="d-flex justify-content-center">
-					<ul class="pagination pagination-lg">
+					<ul class="pagination">
 						<li class="page-item"><a class="page-link" href="{{ url_for('column.show_essay', title=current_title, page=current_page-1) }}">&laquo;</a></li>
 						{% for page in range(1, total_page + 1) %}
 						{% if current_page == page %}
@@ -50,9 +50,9 @@
 					</ul>
 				</div>
 		</div>
-		<div class="col-sm-auto col-md-3" style="margin-top: 50px;">
+		<div class="col-sm-auto col-md-3" style="margin-top: 50px;background: linear-gradient(#FFC0CB, #EE82EE);">
 			<h3>我们的足迹</h3>
-			<nav class="bg-light sidebar">
+			<nav class="sidebar">
 				<div class="sidebar-sticky">
 					<ul class="nav flex-column">
 					{% for t in titles %}
