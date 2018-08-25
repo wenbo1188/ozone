@@ -36,9 +36,9 @@
 	<div class="row">
 		<div class="col-sm-2"></div>
 		<div class="col-sm-4">
-			<div class="card exhibition text-dark" style="background:linear-gradient(rgba(135, 206, 250, 1), rgba(135, 206, 250, 0.6))">
+			<div class="card exhibition text-dark" style="background:linear-gradient(rgba(30, 144, 255, 0.4), rgba(30, 144, 255, 0.3));">
 				<div class="card-header">
-					<h3 class="card-title">汪先森最近喜欢的音乐</h3>
+					<h3 class="card-title text-white">汪先森最近喜欢的音乐</h3>
 				</div>
 				<div class="card-body">
 					<ul class="list-group">
@@ -56,14 +56,14 @@
 			</div>
 		</div>
 		<div class="col-sm-4">
-			<div class="card exhibition text-dark" style="background: linear-gradient(rgba(255, 192, 203, 1), rgba(255, 192, 203, 0.6));">
+			<div class="card exhibition text-dark" style="background: linear-gradient(rgba(171, 130, 255, 0.6), rgba(171, 130, 255, 0.5));">
 				<div class="card-header">
-					<h3 class="card-title">小笨笨最近喜欢的音乐</h3>
+					<h3 class="card-title text-white">小笨笨最近喜欢的音乐</h3>
 				</div>
 				<div class="card-body">
 					<ul class="list-group">
 						{% for song in playlist2 %}
-						<li class="list-group-item" style="background-color: rgba(255, 255, 255, 0);border-color: rgba(0, 0, 0, 0.1);">
+						<li class="list-group-item">
 							<h4 class="card-text"><span class="badge badge-dark">NO.{{ loop.index }}</span> {{ song[0] }}</h4>
 							<audio controls>
 								<source src="{{ url_for('static', filename='songs/') }}{{ song[1] }}.mp3" />
