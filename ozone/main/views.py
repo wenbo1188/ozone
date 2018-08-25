@@ -5,7 +5,7 @@ from jinja2 import TemplateNotFound
 
 from flask import abort
 from flask import current_app as app
-from flask import redirect, render_template, request, session, url_for, flash
+from flask import redirect, render_template, request, session, url_for, flash, send_from_directory
 
 from . import main_page
 from ..config import logger
@@ -186,6 +186,10 @@ def index():
     else:
         return render_template("index.html")
 
+@main_page.route('/_uploads/photos/<photo_name>')
+def get_url(photo_name):
+    return send_from_directory(app.config['UPLOADED_PHOTOS_DEST'], photo_name)
+    
 @main_page.route('/manage/<string:function>', methods=['GET'])
 def manage(function):
     if "logged_in" in session and session["logged_in"] == True:
