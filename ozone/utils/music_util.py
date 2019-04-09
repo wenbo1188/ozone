@@ -3,10 +3,7 @@ import requests
 import os
 import json
 import time
-import base64
-from Crypto.Cipher import AES
 import warnings
-from codecs import encode
 import urllib.request as ur
 import urllib.error as ue
 import urllib.parse as up
@@ -21,24 +18,6 @@ REQ_TIMEOUT = 5
 TOP_NUM = 5
 QUERY_INTERVAL = 3600 * 6 # 6h
 CLEAR_INTERVAL = 30 # 30days
-
-class Song(object):
-    def aesEncrypt(self, text, secKey):
-        pad = 16 - len(text) % 16
-        text = text + pad * chr(pad)
-        encryptor = AES.new(secKey, 2, '0102030405060708')
-        ciphertext = encryptor.encrypt(text)
-        ciphertext = base64.b64encode(ciphertext)
-        ciphertext = str(ciphertext, encoding="utf-8")
-        return ciphertext
-
-    def rsaEncrypt(self, text, pubKey, modulus):
-        text = text[::-1].encode("utf-8")
-        rs = int(encode(text, 'hex'), 16) ** int(pubKey, 16) % int(modulus, 16)
-        return format(rs, 'x').zfill(256)
-
-    def createSecretKey(self, size):
-        return (''.join(map(lambda xx: (hex(xx)[2:]), os.urandom(size))))[0:16]
 
 def songs_change(tracks : dict, res_path : str) -> bool:
     '''
@@ -101,7 +80,6 @@ def get_songs_rank(user_id : str, name : str, playlist_path : str, songs_path : 
     if (songs_change(tracks, res_path)):
         logger.info("Songs change detected")
 
-        song = Song()
         playlist = [{"name":tracks[i]["name"], "id":tracks[i]["id"], "url":(DOWNLOAD_URL+"{}.mp3").format(tracks[i]["id"])} for i in range(TOP_NUM)]
         logger.debug("Playlist:\n{}".format(playlist))
 
