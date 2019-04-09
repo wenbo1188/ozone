@@ -4,6 +4,7 @@ import os
 import json
 import time
 import warnings
+import platform
 import urllib.request as ur
 import urllib.error as ue
 import urllib.parse as up
@@ -26,7 +27,7 @@ def songs_change(tracks : dict, res_path : str) -> bool:
     
     if os.path.exists(res_path) and os.path.isfile(res_path):
         # path exists
-        with open(res_path, 'r') as f:
+        with open(res_path, 'r', encoding="utf-8") as f:
             lines = f.readlines()
             num_of_line = len(lines)
             for num in range(num_of_line):
@@ -40,7 +41,7 @@ def songs_change(tracks : dict, res_path : str) -> bool:
         # path not exists
         print("Path not exist:{}, creating one...".format(res_path))
         try:
-            with open(res_path, 'w+') as f:
+            with open(res_path, 'w+', encoding="utf-8") as f:
                 for i in range(TOP_NUM):
                     f.write(str(tracks[i]["name"]) + '\n')
                     f.write(str(tracks[i]["id"]) + '\n')
@@ -92,7 +93,11 @@ def get_songs_rank(user_id : str, name : str, playlist_path : str, songs_path : 
                 f.write(req.content)
                 logger.info("Success download")
             
-            convert_command = "ffmpeg -i {path}/{id}.mp3 -c:a libvorbis -n {path}/{id}.ogg 1>/dev/null 2>&1".format(path=songs_path, id=playlist[i]["id"])
+            platform_info = platform.platform()
+            if "Windows" in platform_info:
+                convert_command = "ffmpeg -i {path}/{id}.mp3 -c:a libvorbis -n {path}/{id}.ogg 1>NUL 2>&1".format(path=songs_path, id=playlist[i]["id"])
+            else:
+                convert_command = "ffmpeg -i {path}/{id}.mp3 -c:a libvorbis -n {path}/{id}.ogg 1>/dev/null 2>&1".format(path=songs_path, id=playlist[i]["id"])
             err_code = os.system(convert_command)
             if (err_code != 0):
                 logger.warning("Fail to convert mp3 to ogg or the file already exists")
@@ -100,7 +105,7 @@ def get_songs_rank(user_id : str, name : str, playlist_path : str, songs_path : 
                 logger.info("Success convert")
 
         # Record the result
-        with open(res_path, 'w+') as f:
+        with open(res_path, 'w+', encoding="utf-8") as f:
             for i in range(len(playlist)):
                 f.write(str(playlist[i]["name"]) + '\n')
                 f.write(str(playlist[i]["id"]) + '\n')

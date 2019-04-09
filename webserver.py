@@ -34,31 +34,27 @@ if __name__ == '__main__':
     if "Windows" in platform_info:
         if args.debug:
             app = create_app(DevConfigWindows)
-            # song_thread = threading.Thread(target=songs_rank_thread, args=(DevConfigWindows,))
+            song_thread = threading.Thread(target=songs_rank_thread, args=(DevConfigWindows,))
         else:
             app = create_app(ProdConfigWindows)
-            # song_thread = threading.Thread(target=songs_rank_thread, args=(ProdConfigWindows,))
+            song_thread = threading.Thread(target=songs_rank_thread, args=(ProdConfigWindows,))
     elif "Linux" in platform_info:
         if args.debug:
             app = create_app(DevConfigLinux)
             song_thread = threading.Thread(target=songs_rank_thread, args=(DevConfigLinux,))
-            song_thread.start()
         else:
             app = create_app(ProdConfigLinux)
             song_thread = threading.Thread(target=songs_rank_thread, args=(ProdConfigLinux,))
-            song_thread.start()
     else:
         logger.warning("Unrecognized platform, assuming it works fine with linux platform")
         if args.debug:
             app = create_app(DevConfigLinux)
             song_thread = threading.Thread(target=songs_rank_thread, args=(DevConfigLinux,))
-            song_thread.start()
         else:
             app = create_app(ProdConfigLinux)
             song_thread = threading.Thread(target=songs_rank_thread, args=(ProdConfigLinux,))
-            song_thread.start()
 
-    # song_thread.start()
+    song_thread.start()
     
     if app.config['DEBUG']:
         logger.info("Launch in debug mode")

@@ -28,64 +28,38 @@ def get_playlist_info() -> tuple:
 
     if os.path.exists(filepath1) and os.path.isfile(filepath1) and os.path.exists(filepath2) and os.path.isfile(filepath2):
         # path exists
-        with open(filepath1, 'r') as file1:
-            try:
-                line = file1.readline()
-            except:
-                logger.error("Fail to read oneline")
+        with open(filepath1, 'r', encoding="utf-8") as file1:
+            lines = file1.readlines()
+            song = []
+            for i in range(len(lines)):
+                if i % 3 == 0:
+                    name = lines[i].strip('\n')
+                    song.append(name)
+                elif i % 3 == 1:
+                    id = lines[i].strip('\n')
+                    song.append(id)
+                elif i % 3 == 2:
+                    url = lines[i].strip('\n')
+                    song.append(url)
+                    playlist1.append(song)
+                    song = []
 
-            while line:
-                name = line.strip('\n')
-                song = []
-                song.append(name)
-                try:
-                    line = file1.readline()
-                except:
-                    logger.error("Fail to read oneline")
-                id = line.strip('\n')
-                song.append(id)
-                try:
-                    line = file1.readline()
-                except:
-                    logger.error("Fail to read oneline")
-                url = line.strip('\n')
-                song.append(url)
-                playlist1.append(song)
-                try:
-                    line = file1.readline()
-                except:
-                    logger.error("Fail to read oneline")
+        with open(filepath2, 'r', encoding="utf-8") as file2:
+            lines = file2.readlines()
+            song = []
+            for i in range(len(lines)):
+                if i % 3 == 0:
+                    name = lines[i].strip('\n')
+                    song.append(name)
+                elif i % 3 == 1:
+                    id = lines[i].strip('\n')
+                    song.append(id)
+                elif i % 3 == 2:
+                    url = lines[i].strip('\n')
+                    song.append(url)
+                    playlist2.append(song)
+                    song = []
 
-        with open(filepath2, 'r') as file2:
-            try:
-                line = file2.readline()
-            except:
-                logger.error("Fail to read oneline")
-
-            while line:
-                name = line.strip('\n')
-                song = []
-                song.append(name)
-                try:
-                    line = file2.readline()
-                except:
-                    logger.error("Fail to read oneline")
-                id = line.strip('\n')
-                song.append(id)
-                try:
-                    line = file2.readline()
-                except:
-                    logger.error("Fail to read oneline")
-                url = line.strip('\n')
-                song.append(url)
-                playlist2.append(song)
-                try:
-                    line = file2.readline()
-                except:
-                    logger.error("Fail to read oneline")
-
-        file1.close()
-        file2.close()
     else:
         # path not exists
         create_files_command = "touch {} && touch {}".format(filepath1, filepath2)
