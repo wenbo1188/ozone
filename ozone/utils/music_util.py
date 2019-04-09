@@ -16,6 +16,7 @@ warnings.filterwarnings("ignore")
 
 REQ_TIMEOUT = 5
 URL_BASE = "http://music.163.com/api/playlist/detail?id="
+DOWNLOAD_URL = "http://music.163.com/song/media/outer/url?id="
 REQ_TIMEOUT = 5
 TOP_NUM = 5
 QUERY_INTERVAL = 3600 * 6 # 6h
@@ -39,74 +40,34 @@ class Song(object):
     def createSecretKey(self, size):
         return (''.join(map(lambda xx: (hex(xx)[2:]), os.urandom(size))))[0:16]
 
-    def getUrlSong(self, song_id : int) -> str:
-        """
-        Get play url of songs certained by its id,
-        using music.163.com api
-        """
-        # url = 'http://music.163.com/weapi/v1/play/record?csrf_token='
-        url = 'http://music.163.com/weapi/song/enhance/player/url?csrf_token='
-        headers = {'Accept-Encoding':'gzip, deflate', 'Host':'music.163.com', 'Origin':'http://music.163.com', 'Referer': 'http://music.163.com/', 'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299'}
-        # text = "{\"uid\":\"93159006\",\"type\":\"-1\",\"limit\":\"1000\",\"offset\":\"0\",\"total\":\"true\",\"csrf_token\":\"\"}"
-        text = '{\"ids\":\"[' + str(song_id) + ']\",\"br\":128000,\"csrf_token\":\"\"}'
-        modulus = '00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7'
-        nonce = '0CoJUm6Qyw8W8jud'
-        pubKey = '010001'
-        secKey = self.createSecretKey(16)
-        encText = self.aesEncrypt(self.aesEncrypt(text, nonce), secKey)
-        encSecKey = self.rsaEncrypt(secKey, pubKey, modulus)
-        data = {'params': encText, 
-                'encSecKey': encSecKey
-                }
-        req = requests.post(url, headers=headers, data = data)
-        # print(req.content.decode())
-
-        try:
-            data = json.loads(req.content.decode())
-        except:
-            print("Invalid json result")
-            return None
-
-        # print(data["data"][0]["url"])
-        try:
-            song_url = data["data"][0]["url"]
-        except:
-            print("Fail to get url from json returned")
-            return None
-
-        return song_url
-
 def songs_change(tracks : dict, res_path : str) -> bool:
     '''
     Detect songs change
     '''
-
-    num_of_line = 0
+    
     if os.path.exists(res_path) and os.path.isfile(res_path):
         # path exists
         with open(res_path, 'r') as f:
-            try:
-                line = f.readline()
-                num_of_line += 1
-            except:
-                logger.error("Fail to read oneline")
-
-            while line:
-                if (num_of_line % 3) == 2:
+            lines = f.readlines()
+            num_of_line = len(lines)
+            for num in range(num_of_line):
+                if (num % 3 == 1):
                     #deal with the line
-                    id = int(line.strip('\n'))
+                    id = int(lines[num].strip('\n'))
                     if id not in [tracks[i]["id"] for i in range(TOP_NUM)]:
                         f.close()
                         return True
-
-                try:
-                    line = f.readline()
-                    num_of_line += 1
-                except:
-                    logger.error("Fail to read oneline")
-
-        f.close()
     else:
+        # path not exists
+        print("Path not exist:{}, creating one...".format(res_path))
+        try:
+            with open(res_path, 'w+') as f:
+                for i in range(TOP_NUM):
+                    f.write(str(tracks[i]["name"]) + '\n')
+                    f.write(str(tracks[i]["id"]) + '\n')
+                    f.write((DOWNLOAD_URL+"{}.mp3").format(tracks[i]["id"]) + '\n')
+        except BaseException as e:
+            print("BaseException: {}".format(e))
         return True
         
     return False
@@ -141,16 +102,16 @@ def get_songs_rank(user_id : str, name : str, playlist_path : str, songs_path : 
         logger.info("Songs change detected")
 
         song = Song()
-        playlist = [{"name":tracks[i]["name"], "id":tracks[i]["id"], "url":song.getUrlSong(tracks[i]["id"])} for i in range(TOP_NUM)]
+        playlist = [{"name":tracks[i]["name"], "id":tracks[i]["id"], "url":(DOWNLOAD_URL+"{}.mp3").format(tracks[i]["id"])} for i in range(TOP_NUM)]
         logger.debug("Playlist:\n{}".format(playlist))
 
         # Download the song and convert MP3 to OGG
         for i in range(len(playlist)):
-            download_command = "wget -nc -O {path}/{id}.mp3 {url}".format(path=songs_path, id=playlist[i]["id"], url=playlist[i]["url"])
-            err_code = os.system(download_command)
-            if (err_code != 0):
-                logger.warning("Fail to download or the file already exists")
-            else:
+            download_url = playlist[i]["url"]
+            headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36"}
+            req = requests.get(url=download_url, headers=headers)
+            with open("{path}/{id}.mp3".format(path=songs_path, id=playlist[i]["id"]), "wb") as f:
+                f.write(req.content)
                 logger.info("Success download")
             
             convert_command = "ffmpeg -i {path}/{id}.mp3 -c:a libvorbis -n {path}/{id}.ogg 1>/dev/null 2>&1".format(path=songs_path, id=playlist[i]["id"])
@@ -167,8 +128,6 @@ def get_songs_rank(user_id : str, name : str, playlist_path : str, songs_path : 
                 f.write(str(playlist[i]["id"]) + '\n')
                 f.write(str(playlist[i]["url"]) + '\n')
     
-        f.close()
-
     else:
         logger.info("No song change")
 
