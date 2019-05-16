@@ -5,7 +5,7 @@ from jinja2 import TemplateNotFound
 
 from flask import abort
 from flask import current_app as app
-from flask import g, redirect, render_template, request, session, url_for, flash
+from flask import g, redirect, render_template, session, url_for, flash
 
 from . import message_page
 from ..config import logger
@@ -13,9 +13,10 @@ from ..utils.db_util import get_db
 from ..utils.reminder_util import EmailReminder
 from ..utils.form_util import MessageForm
 
+
 @message_page.route('/<int:page>')
 def show_message(page=1):
-    # check if login
+    # Check if login
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
@@ -24,25 +25,25 @@ def show_message(page=1):
         db = get_db()
         num_per_page = app.config['MESSAGE_PER_PAGE']
 
-        # get total num of messages
+        # Get total num of messages
         try:
             cur = db.cursor().execute("select count(*) from message")
         except sqlite3.DatabaseError as err:
             logger.error("Invalid database operation:{}".format(err))
             abort(404)
         num = cur.fetchall()[0][0]
-        if (num % num_per_page == 0):
+        if num % num_per_page == 0:
             max_page = int(num / num_per_page)
         else:
             max_page = int((num / num_per_page) + 1)
 
         logger.debug("Total num of message is {}, max_page is {}".format(num, max_page))
         
-        if ((page - 1) * num_per_page >= num):
+        if (page - 1) * num_per_page >= num:
             logger.warning("Illegal page number: {}".format(page))
             flash("再翻也没有啦!", "primary")
             page = max_page
-        elif (page <= 0):
+        elif page <= 0:
             logger.warning("Illegal page number: {}".format(page))
             flash("再翻也没有啦!", "primary")
             page = 1
@@ -60,9 +61,10 @@ def show_message(page=1):
             logger.error("Template not found")
             abort(404)
 
+
 @message_page.route('/add', methods=['GET', 'POST'])
 def add_message():
-    # check if log in
+    # Check if log in
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
@@ -72,7 +74,7 @@ def add_message():
 
     if form.validate_on_submit():
         content = form.content.data
-        # start add message
+        # Start add message
         with app.app_context():
             db = get_db()
             timestamp = int(time.time())
@@ -90,10 +92,10 @@ def add_message():
             db.commit()
 
             # email reminder
-            if (owner == "汪先森"):
+            if owner == "汪先森":
                 receiver = app.config['USER2_MAILADDRESS']
                 receiver_name = app.config['USERNAME2']
-            elif (owner == "小笨笨"):
+            elif owner == "小笨笨":
                 receiver = app.config['USER1_MAILADDRESS']
                 receiver_name = app.config['USERNAME1']
             else:
@@ -117,9 +119,10 @@ def add_message():
     else:
         return render_template('add_message.html', form=form)
 
+
 @message_page.route('/update/<int:timestamp>', methods=['GET', 'POST'])
 def update(timestamp):
-    # check if login
+    # Check if login
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
@@ -168,14 +171,14 @@ def update(timestamp):
 
 @message_page.route('/delete/<int:timestamp>', methods=['GET'])
 def delete(timestamp):
-    # check if log in
+    # Check if log in
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
     
     with app.app_context():
         db = get_db()
-        # check if the timestamp is valid
+        # Check if the timestamp is valid
         if db.cursor().execute("select * from message where timestamp = ?", [timestamp,]).fetchone() is not None:
             try:
                 db.cursor().execute("delete from message where timestamp = ?", [timestamp,])

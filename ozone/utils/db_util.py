@@ -12,6 +12,7 @@ def connect_db():
     rv.row_factory = sqlite3.Row
     return rv
 
+
 def get_db():
     if not hasattr(g, 'sqlite_db'):
         g.sqlite_db = connect_db()

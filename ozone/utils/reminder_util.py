@@ -3,17 +3,16 @@ import threading
 from email.mime.text import MIMEText
 from email.header import Header
 
+
 class EmailReminder:
-    '''
-    Reminder by sending email
-    '''
+    """Reminder by sending email"""
 
     def __init__(self, mail_server, mail_port, mail_username, mail_password, debug_mode = False, logger = None):
         try:
             self.smtpserver = smtplib.SMTP_SSL(mail_server, mail_port)
         except smtplib.SMTPConnectError as err:
             self.smtpserver = None
-            if logger != None:
+            if logger is not None:
                 logger.error("{}".format(err))
         self.mail_server = mail_server
         self.mail_port = mail_port
@@ -22,8 +21,8 @@ class EmailReminder:
         self.debug_mode = debug_mode
         self.logger = logger
 
-        # set debug level
-        if (debug_mode == True):
+        # Set debug level
+        if debug_mode:
             self.smtpserver.set_debuglevel(1)
 
     def send(self, receiver, receiver_name, message_content):
@@ -37,9 +36,7 @@ class EmailReminder:
         mail_thread.start()
 
     def send_async_email(self, msg, receiver):
-        '''
-        Server login
-        '''
+        """Server login"""
 
         try:
             self.smtpserver.login(self.mail_username, self.mail_password)
@@ -47,5 +44,5 @@ class EmailReminder:
         except (smtplib.SMTPAuthenticationError, smtplib.SMTPSenderRefused) as err:
             self.logger.error("Fail to send email:\n{}".format(err))
         finally:
-            if self.smtpserver != None:
+            if self.smtpserver is not None:
                 self.smtpserver.quit() 

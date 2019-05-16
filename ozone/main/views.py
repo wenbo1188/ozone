@@ -13,10 +13,9 @@ from ..utils.db_util import get_db
 from ..utils.form_util import LoginForm
 from sqlite3 import DatabaseError
 
+
 def get_playlist_info() -> tuple:
-    '''
-    get playlist info from file under folder: ../songs_rank/
-    '''
+    """Get playlist info from file under folder: ../songs_rank/"""
 
     logger.info("Getting playlist info")
 
@@ -27,7 +26,7 @@ def get_playlist_info() -> tuple:
     filepath2 = "{}/{}.txt".format(app.config["PLAYLIST_PATH"], app.config["USERNAME2"])
 
     if os.path.exists(filepath1) and os.path.isfile(filepath1) and os.path.exists(filepath2) and os.path.isfile(filepath2):
-        # path exists
+        # Path exists
         with open(filepath1, 'r', encoding="utf-8") as file1:
             lines = file1.readlines()
             song = []
@@ -73,10 +72,9 @@ def get_playlist_info() -> tuple:
 
     return playlist1, playlist2
 
+
 def get_exhibition_essay() -> list:
-    '''
-    Get essay for exhibition in index.html
-    '''
+    """Get essay for exhibition in index.html"""
 
     exhibition_num = 4
 
@@ -91,10 +89,9 @@ def get_exhibition_essay() -> list:
 
     return exhibition
 
+
 def get_exhibition_photo() -> list:
-    '''
-    Get photo for exhibition in index.html
-    '''
+    """Get photo for exhibition in index.html"""
 
     from .. import photos
     exhibition_num = 4
@@ -109,6 +106,7 @@ def get_exhibition_photo() -> list:
         exhibition = [dict(url=photos.url(row["name"])) for row in cur.fetchall()]
 
     return exhibition
+
 
 @main_page.route('/login', methods=['GET', 'POST'])
 def login():
@@ -135,6 +133,7 @@ def login():
 
     return render_template("login.html", form=form)
 
+
 @main_page.route('/logout')
 def logout():
     if "logged_user" not in session:
@@ -148,6 +147,7 @@ def logout():
     flash("You have successfully logged out!", "success")
     return redirect(url_for("main.index"))
 
+
 @main_page.route('/', methods=['GET'])
 def index():
     if "logged_in" in session and session["logged_in"] == True:
@@ -160,10 +160,12 @@ def index():
     else:
         return render_template("index.html")
 
+
 @main_page.route('/_uploads/photos/<photo_name>')
 def get_url(photo_name):
     return send_from_directory(app.config['UPLOADED_PHOTOS_DEST'], photo_name)
-    
+
+
 @main_page.route('/manage/<string:function>', methods=['GET'])
 def manage(function):
     if "logged_in" in session and session["logged_in"] == True:
@@ -179,7 +181,7 @@ def manage(function):
             logger.debug("username:{}".format(owner))
 
             if function == 'message':
-                # get messages
+                # Get messages
                 try:
                     cur = db.cursor().execute("select timestamp, owner, content from message where owner = ? order by timestamp desc", [owner])
                 except DatabaseError as err:
@@ -190,7 +192,7 @@ def manage(function):
 
                 return render_template("message_manage.html", messages=messages)
             elif function == 'column':
-                # get essays
+                # Get essays
                 try:
                     cur = db.cursor().execute("select timestamp, owner, title, content from essay where owner = ? order by timestamp desc", [owner])
                 except DatabaseError as err:
@@ -202,7 +204,7 @@ def manage(function):
                 return render_template("column_manage.html", essays = essays)
                 
             elif function == 'album':
-                # get photos
+                # Get photos
                 try:
                     cur = db.cursor().execute("select id, name, album, timestamp from photo order by timestamp desc")
                 except DatabaseError as err:
@@ -212,7 +214,7 @@ def manage(function):
                         for row in cur.fetchall()]
                 logger.debug("photos:\n{}".format(photos))
 
-                # get albums
+                # Get albums
                 try:
                     cur = db.cursor().execute("select id, title, about, cover, timestamp from album order by timestamp desc")
                 except DatabaseError as err:

@@ -9,10 +9,9 @@ from .utils.db_util import get_db
 import time
 from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
 
-def danger_str_filter(string_to_filter : str):
-    '''
-    Filter to skip dangerous html tag
-    '''
+
+def danger_str_filter(string_to_filter: str):
+    """Filter to skip dangerous html tag"""
 
     danger_list = ["<script>", "</script>", "<body>", "</body>"]
     for danger_str in danger_list:
@@ -20,10 +19,9 @@ def danger_str_filter(string_to_filter : str):
 
     return string_to_filter
 
-def my_truncate(string_to_filter : str, length=255, end="..."):
-    '''
-    Truncate strings to the given length
-    '''
+
+def my_truncate(string_to_filter: str, length=255, end="..."):
+    """Truncate strings to the given length"""
 
     if len(string_to_filter) > length:
         result = "{}{}".format(string_to_filter[:length], end)
@@ -31,16 +29,16 @@ def my_truncate(string_to_filter : str, length=255, end="..."):
         result = string_to_filter
     return result
 
-def my_timefmt(string_to_filter : str):
-    '''
-    Transform timestamp of integer to certain format
-    '''
+
+def my_timefmt(string_to_filter: str):
+    """Transform timestamp of integer to certain format"""
 
     result = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(string_to_filter))
     return result
 
+
 def register_filter():
-    '''Register the filter to skip dangerous html tag'''
+    """Register the filter to skip dangerous html tag"""
 
     logger.info("Registering filter")
 
@@ -48,6 +46,7 @@ def register_filter():
     env.filters['my_str_filter'] = danger_str_filter
     env.filters['my_truncate'] = my_truncate
     env.filters['my_timefmt'] = my_timefmt
+
 
 def init_db():
     logger.info("Initializing database...")
@@ -61,10 +60,12 @@ def init_db():
         except:
             logger.error("Fail to init db")
 
+
 photos = UploadSet('photos', IMAGES)
 
+
 def create_app(config):
-    '''Initializing app'''
+    """Initializing app"""
 
     app = Flask(__name__)
     app.config.from_object(config)
@@ -79,10 +80,13 @@ def create_app(config):
         @current_app.teardown_appcontext
         def close_db(error):
             if hasattr(g, 'sqlite_db'):
-                logger.info("Closing database...")
+                if error:
+                    logger.error("Closing database...: {}".format(error))
+                else:
+                    logger.info("Closing database...")
                 g.sqlite_db.close()
 
     configure_uploads(app, photos)
-    patch_request_class(app) # default max file size 64M
+    patch_request_class(app)  # Default max file size 64M
 
     return app

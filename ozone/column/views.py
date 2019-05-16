@@ -13,9 +13,10 @@ from ..utils.db_util import get_db
 from ..utils.reminder_util import EmailReminder
 from ..utils.form_util import EssayForm
 
+
 @column_page.route('/<title>/<int:page>')
 def show_essay(title, page=1):
-    # check if login
+    # Check if login
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
@@ -23,7 +24,7 @@ def show_essay(title, page=1):
     with app.app_context():
         db = get_db()
         num_per_page = app.config['COLUMN_PER_PAGE']
-        # get all the titles
+        # Get all the titles
         try:
             cur = db.cursor().execute("select distinct title from essay order by timestamp desc")
         except sqlite3.DatabaseError as err:
@@ -32,7 +33,7 @@ def show_essay(title, page=1):
         titles = [row[0] for row in cur.fetchall()]
         logger.debug("All the titles:\n{}".format(titles))
 
-        if (title == "all"):
+        if title == "all":
             logger.debug("Title is all")
 
             # get total num of essays
@@ -42,17 +43,17 @@ def show_essay(title, page=1):
                 logger.error("Invalid database operation:{}".format(err))
                 abort(404)
             num = cur.fetchall()[0][0]
-            if (num % num_per_page == 0):
+            if num % num_per_page == 0:
                 max_page = int(num / num_per_page)
             else:
                 max_page = int((num / num_per_page) + 1)
             logger.debug("Total num of message is {}, max_page is {}".format(num, max_page))
 
-            if ((page - 1) * num_per_page >= num):
+            if (page - 1) * num_per_page >= num:
                 logger.warning("Illegal page number: {}".format(page))
                 flash("再翻也没有啦!", "primary")
                 page = max_page
-            elif (page <= 0):
+            elif page <= 0:
                 logger.warning("Illegal page number: {}".format(page))
                 flash("再翻也没有啦!", "primary")
                 page = 1
@@ -72,17 +73,17 @@ def show_essay(title, page=1):
                 logger.error("Invalid database operation:{}".format(err))
                 abort(404)
             num = cur.fetchall()[0][0]
-            if (num % num_per_page == 0):
+            if num % num_per_page == 0:
                 max_page = int(num / num_per_page)
             else:
                 max_page = int((num / num_per_page) + 1)
             logger.debug("Total num of message is {}, max_page is {}".format(num, max_page))
 
-            if ((page - 1) * num_per_page >= num):
+            if (page - 1) * num_per_page >= num:
                 logger.warning("Illegal page number: {}".format(page))
                 flash("再翻也没有啦!", "primary")
                 page = max_page
-            elif (page <= 0):
+            elif page <= 0:
                 logger.warning("Illegal page number: {}".format(page))
                 flash("再翻也没有啦!", "primary")
                 page = 1
@@ -100,9 +101,10 @@ def show_essay(title, page=1):
             logger.error("Template not found")
             abort(404)
 
+
 @column_page.route('/add', methods=['GET', 'POST'])
 def add_essay():
-    # check if login
+    # Check if login
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
@@ -111,7 +113,7 @@ def add_essay():
     form = EssayForm()
 
     if form.validate_on_submit():
-        # start add message
+        # Start add message
         with app.app_context():
             db = get_db()
             timestamp = int(time.time())
@@ -134,10 +136,10 @@ def add_essay():
             db.commit()
 
             # email reminder
-            if (owner == "汪先森"):
+            if owner == "汪先森":
                 receiver = app.config['USER2_MAILADDRESS']
                 receiver_name = app.config['USERNAME2']
-            elif (owner == "小笨笨"):
+            elif owner == "小笨笨":
                 receiver = app.config['USER1_MAILADDRESS']
                 receiver_name = app.config['USERNAME1']
             else:
@@ -160,9 +162,10 @@ def add_essay():
     else:
         return render_template("add_essay.html", form=form)
 
+
 @column_page.route('/update/<int:timestamp>', methods=['GET', 'POST'])
 def update(timestamp):
-    # check if login
+    # Check if login
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
@@ -211,16 +214,17 @@ def update(timestamp):
         
             return render_template("update.html", form=form, old_essay=old_essay, timestamp=timestamp)
 
+
 @column_page.route('/delete/<int:timestamp>', methods=['GET'])
 def delete(timestamp):
-    # check if login
+    # Check if login
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
     
     with app.app_context():
         db = get_db()
-        # check if the timestamp is valid
+        # Check if the timestamp is valid
         if db.cursor().execute("select * from essay where timestamp = ?", [timestamp,]).fetchone() is not None:
             try:
                 db.cursor().execute("delete from essay where timestamp = ?", [timestamp])

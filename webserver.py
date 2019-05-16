@@ -8,21 +8,20 @@ import threading
 import argparse
 import platform
 
+
 def songs_rank_thread(config):
-    '''
-    Songs rank thread
-    '''
+    """Songs rank thread"""
 
     query_loop(config)
 
+
 def webserver_thread(app):
-    '''
-    Ozone app server thread
-    '''
+    """Ozone app server thread"""
 
     http_server = HTTPServer(WSGIContainer(app))
     http_server.listen(5000)
     IOLoop.instance().start()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Ozone app parser')

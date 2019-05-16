@@ -14,6 +14,7 @@ from ..config import logger
 from ..utils.db_util import get_db
 from ..utils.form_util import AlbumForm, UploadForm
 
+
 @album_page.route('/upload_photo/<string:title>', methods=['GET', 'POST'])
 def upload_photo(title="null"):
     if "logged_in" not in session:
@@ -42,7 +43,7 @@ def upload_photo(title="null"):
         with app.app_context():
             db = get_db()
 
-            # check if the album exists
+            # Check if the album exists
             try:
                 cur = db.cursor().execute("select * from album where title = ?", [title,])
             except sqlite3.DatabaseError as err:
@@ -70,6 +71,7 @@ def upload_photo(title="null"):
             flash("You have successfully uploaded photo", "success")
 
     return render_template("photo_upload.html", form=form, title=title)
+
 
 @album_page.route('/delete_photo/<string:photo_id>', methods=['GET'])
 def delete_photo(photo_id):
@@ -101,7 +103,8 @@ def delete_photo(photo_id):
 
         flash("You have successfully deleted a photo", "success")
         return redirect((url_for('main.manage', function="album")))
-    
+
+
 @album_page.route('/', methods=['GET'])
 def show_photo():
     if "logged_in" not in session:
@@ -113,7 +116,7 @@ def show_photo():
     with app.app_context():
         db = get_db()
 
-        # for displaymode all
+        # For displaymode all
         try:
             cur = db.cursor().execute("select distinct id, name from photo")
         except sqlite3.DatabaseError as err:
@@ -121,7 +124,7 @@ def show_photo():
             abort(404)
         photo_infos_all = [dict(id = row["id"], name=row["name"], url=photos.url(row["name"])) for row in cur.fetchall()]
         
-        # for displaymode album
+        # For displaymode album
         try:
             cur = db.cursor().execute("select distinct title from album")
         except sqlite3.DatabaseError as err:
@@ -143,6 +146,7 @@ def show_photo():
         
     return render_template("show_photo.html", photo_infos_all=photo_infos_all, photo_infos_album=photo_infos_album)
 
+
 @album_page.route('/add_album', methods=['GET', 'POST'])
 def add_album():
     if "logged_in" not in session:
@@ -159,7 +163,7 @@ def add_album():
         md5_value.update(bytes(str(timestamp), 'utf-8'))
         album_id = md5_value.hexdigest()
         about = form.about.data
-        if about == None:
+        if about is None:
             about = "NULL"
         with app.app_context():
             db = get_db()
@@ -175,6 +179,7 @@ def add_album():
         return redirect(url_for("main.manage", function="album"))
     else:
         return render_template("add_album.html", form=form)
+
 
 @album_page.route('/delete_album/<string:album_id>')
 def delete_album(album_id):
@@ -199,13 +204,15 @@ def delete_album(album_id):
     flash("You have successfully deleted an album", "success")
     return redirect((url_for('main.manage', function="album")))
 
+
 @album_page.route('/update_album')
 def update_album():
     pass
 
+
 @album_page.route('/add_photo_to_album/<string:photo_id>', methods=['POST'])
 def add_photo_to_album(photo_id):
-    # check if login
+    # Check if login
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
@@ -213,7 +220,7 @@ def add_photo_to_album(photo_id):
     album_title = request.form["album_title"]
 
     with app.app_context():
-        # check if photo_id and album_id exist
+        # Check if photo_id and album_id exist
         db = get_db()
         try:
             res1 = db.cursor().execute("select * from album where title = ?", [album_title,])
@@ -238,16 +245,17 @@ def add_photo_to_album(photo_id):
             flash("No such photo or album found", "danger")
             return redirect(url_for("album.show_photo"))
 
+
 @album_page.route('/add_photo_to_exhibition/<string:photo_id>')
 def add_photo_to_exhibition(photo_id):
-    # check if login
+    # Check if login
     if "logged_in" not in session:
         flash("You need login to continue", "warning")
         return redirect(url_for("main.login"))
 
     with app.app_context():
         db = get_db()
-        # check if photo already in exhibition
+        # Check if photo already in exhibition
         if db.cursor().execute("select exhibition from photo where id = ?", [photo_id,]).fetchone()[0] == 1:
             flash("This photo is already in exhibition!", "warning")
             return redirect(url_for("album.show_photo"))
@@ -261,7 +269,7 @@ def add_photo_to_exhibition(photo_id):
                 abort(404)
             logger.debug("old_exhibition_num: {}".format(old_exhibition_num))
             if old_exhibition_num < exhibition_num:
-                # update exhibition by photo_id
+                # Update exhibition by photo_id
                 try:
                     db.cursor().execute("update photo set exhibition = 1, last_chosen_time = ? where id = ?", [timestamp, photo_id])
                 except sqlite3.DatabaseError as err:
