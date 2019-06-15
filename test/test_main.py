@@ -1,8 +1,10 @@
-from . import app, client, prepare
-from ozone.config import TestConfig
-from . import (assertTrue_status, assertFalse_status, assertTrue_content, assertFalse_content, 
-assertTrue_session, assertFalse_session)
 import pytest
+
+from ozone.config import TestConfig
+from . import (assertTrue_status, assertTrue_content, assertFalse_content,
+               assertTrue_session, assertFalse_session)
+from . import app, client, prepare
+
 
 def test_index_visit_without_login(client):
     rv = client.get('/')
@@ -21,8 +23,8 @@ def test_login_correct(client, username, password):
     
     # Login with correct username and password
     rv = client.post('/login', data={
-        'username':username,
-        'password':password
+        'username': username,
+        'password': password
     }, follow_redirects=True)
     assertTrue_status(rv, 200)
 
@@ -43,8 +45,8 @@ def test_login_correct(client, username, password):
 def test_login_incorrect(client, username, password):
     # Login with incorrect username or password
     rv = client.post('/login', data={
-        'username':username,
-        'password':password
+        'username': username,
+        'password': password
     })
     assertTrue_status(rv, 200)
     assertTrue_content(rv, "Wrong username or password")
@@ -60,15 +62,15 @@ def test_login_incorrect(client, username, password):
     (TestConfig.USERNAME2, TestConfig.PASSWORD),
 ))
 def test_logout(client, username, password):
-    # logout without login first
+    # Logout without login first
     rv = client.get('/logout', follow_redirects=True)
     assertTrue_status(rv, 200)
     assertTrue_content(rv, "You have not logged in yet")
 
-    # login first
+    # Login first
     rv = client.post('/login', data={
-        'username':username,
-        'password':password
+        'username': username,
+        'password': password
     })
     rv = client.get('/logout', follow_redirects=True)
     assertTrue_status(rv, 200)
@@ -81,18 +83,19 @@ def test_logout(client, username, password):
 
 
 def test_manage_message_without_login(client):
-    # visit without login
+    # Visit without login
     rv = client.get('/manage/message', follow_redirects=True)
     assertTrue_status(rv, 200)
     assertTrue_content(rv, "You need login to continue")
     assertFalse_content(rv, "操作")
+
 
 @pytest.mark.parametrize(("username", "password"), (
     (TestConfig.USERNAME1, TestConfig.PASSWORD),
     (TestConfig.USERNAME2, TestConfig.PASSWORD),
 ))
 def test_manage_message_login(client, prepare, username, password):
-    # visit with login
+    # Visit with login
     prepare.login(username, password)
     prepare.add_message()
     rv = client.get('/manage/message')
@@ -102,18 +105,19 @@ def test_manage_message_login(client, prepare, username, password):
 
 
 def test_manage_column_without_login(client):
-    # visit without login
+    # Visit without login
     rv = client.get('/manage/column', follow_redirects=True)
     assertTrue_status(rv, 200)
     assertTrue_content(rv, "You need login to continue")
     assertFalse_content(rv, "操作")
+
 
 @pytest.mark.parametrize(("username", "password"), (
     (TestConfig.USERNAME1, TestConfig.PASSWORD),
     (TestConfig.USERNAME2, TestConfig.PASSWORD),
 ))
 def test_manage_column_login(client, prepare, username, password):
-    # visit with login
+    # Visit with login
     prepare.login(username, password)
     prepare.add_essay()
     rv = client.get('/manage/column')
@@ -124,18 +128,19 @@ def test_manage_column_login(client, prepare, username, password):
 
 
 def test_manage_album_without_login(client):
-    # visit without login
+    # Visit without login
     rv = client.get('/manage/album', follow_redirects=True)
     assertTrue_status(rv, 200)
     assertTrue_content(rv, "You need login to continue")
     assertFalse_content(rv, "操作")
+
 
 @pytest.mark.parametrize(("username", "password"), (
     (TestConfig.USERNAME1, TestConfig.PASSWORD),
     (TestConfig.USERNAME2, TestConfig.PASSWORD),
 ))
 def test_manage_album_login(client, prepare, username, password):
-    # visit with login
+    # Visit with login
     prepare.login(username, password)
     rv = client.get('/manage/album')
     assertTrue_status(rv, 200)

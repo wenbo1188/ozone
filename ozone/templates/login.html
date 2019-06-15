@@ -1,34 +1,77 @@
-{% extends "base.html" %}
-{% block body %}
-<div class="container">
-	<div class="row">
-		<div class="col-sm-10 offset-sm-1 col-md-4 offset-md-4">
+<!doctype html>
+<html lang="zh-CN" xmlns:link="http://www.w3.org/1999/XSL/Transform">
 
-			<!-- login -->
-			<div align="center">
-				<h1>Sign in to Ozone</h1>
-			</div>
-			</br>
-			<div class="card bg-light text-dark">
-				<div class="card-body">
-					<form class="form" action="{{ url_for('main.login') }}" method="post">
-						{{ form.hidden_tag() }}
-						<div class="form-group">
-							<label for="username">用户名</label>
-							<input type="text" class="form-control" id="username" name="username">
-						</div>
-						<div class="form-group">
-							<label for="password">密码</label>
-							<input type="password" class="form-control" id="password" name="password">
-						</div>
-						<div>
-							<button type="submit" class="btn btn-primary btn-lg btn-block">登录</button>
-						</div>
-					</form>
-				</div>
-			</div>
+<head>
+	<!-- Required meta tags -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-		</div>
-	</div>
-</div>
-{% endblock %}
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="{{ url_for('static', filename='lib/bootstrap-4.3.1/css/bootstrap.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='AudioPlayer/css/audioplayer.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+	<link rel="shortcut icon" href="{{ url_for('static', filename='imgs/favicon.ico') }}">
+    <title>Login</title>
+</head>
+
+<body style="background-color: #CCCCCC;">
+    <div>
+        <br>
+    </div>
+    <div class="container">
+        <div class="card login">
+            <div class="card-header">
+                <br>
+                <h3>SIGN UP</h3>
+                <br>
+            </div>
+            <div class="card-body">
+                <form class="form" action="{{ url_for('main.login') }}" method="post">
+                    {{ form.hidden_tag() }}
+                    <br>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Username">
+                    </div>
+                    <div class="form-group">
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary btn-login">登录</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="{{ url_for('static', filename='tinymce/js/tinymce/tinymce.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tinymce_setup.js') }}"></script>
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/popper.js/1.12.5/umd/popper.min.js"></script>
+<script src="{{ url_for('static', filename='lib/bootstrap-4.3.1/js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='AudioPlayer/js/jquery.js') }}"></script>
+<script src="{{ url_for('static', filename='AudioPlayer/js/audioplayer.js') }}"></script>
+<script>
+	$(function() {
+		$('audio').audioPlayer();
+	});
+</script>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<footer>
+	<nav class="navbar navbar-expand-sm bg-dark navbar-dark fixed-bottom justify-content-center">
+		<a class="navbar-brand" href="{{ url_for('main.index') }}">Ozone</a>
+		<span class="navbar-text">
+			Made by Wen Copyright&copy; 2018-2019. All rights reserved.
+		</span>
+	</nav>
+</footer>
+
+</html>

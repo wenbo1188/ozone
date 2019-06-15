@@ -5,14 +5,15 @@ from ozone.config import TestConfig
 from ozone import create_app
 from flask import session
 
+
 class Prepare(object):
     def __init__(self, client):
         self._client = client
     
     def login(self, username, password):
         return self._client.post('/login', data={
-            'username':username,
-            'password':password
+            'username': username,
+            'password': password
         })
     
     def logout(self):
@@ -22,28 +23,29 @@ class Prepare(object):
         for i in range(num):
             if repeat:
                 self._client.post('/message/add', data={
-                    'content':content
+                    'content': content
                 })
             else:
                 self._client.post('/message/add', data={
-                    'content':'{}_{}'.format(content, i)
+                    'content': '{}_{}'.format(content, i)
                 })
     
     def add_essay(self, num=1, title="#test title", content="test essay", repeat=True):
         for i in range(num):
             if repeat:
                 self._client.post('/column/add', data={
-                    'title':title,
-                    'content':content
+                    'title': title,
+                    'content': content
                 })
             else:
                 self._client.post('/column/add', data={
-                    'title':'{}_{}'.format(title, i),
-                    'content':'{}_{}'.format(content, i)
+                    'title': '{}_{}'.format(title, i),
+                    'content': '{}_{}'.format(content, i)
                 })
     
     def add_photo(self):
         pass
+
 
 @pytest.fixture
 def app():
@@ -62,30 +64,38 @@ def app():
     os.unlink(TestConfig.DATABASE)
     os.removedirs(common_path)
 
+
 @pytest.fixture
 def client(app):
     return app.test_client()
-    
+
+
 @pytest.fixture
 def prepare(client):
     return Prepare(client)
 
+
 def assertTrue_status(response, status_code):
     assert response.status_code == status_code
+
 
 def assertFalse_status(response, status_code):
     assert response.status_code != status_code
 
+
 def assertTrue_content(response, content):
     assert content in response.get_data(as_text=True)
 
+
 def assertFalse_content(response, content):
     assert content not in response.get_data(as_text=True)
+
 
 def assertTrue_session(key, value=None):
     assert key in session
     if value:
         assert session[key] == value
+
 
 def assertFalse_session(key, value=None):
     if value:

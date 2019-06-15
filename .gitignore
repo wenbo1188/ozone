@@ -11,3 +11,5 @@ log/
 .vscode/
 .coverage
 htmlcov/
+
+.idea/

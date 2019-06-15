@@ -77,7 +77,8 @@ def get_songs_rank(user_id: str, name: str, playlist_path: str, songs_path: str)
     if songs_change(tracks, res_path):
         logger.info("Songs change detected")
 
-        playlist = [{"name": tracks[i]["name"], "id": tracks[i]["id"], "url": (DOWNLOAD_URL+"{}.mp3").format(tracks[i]["id"])} for i in range(TOP_NUM)]
+        playlist = [{"name": tracks[i]["name"], "id": tracks[i]["id"], "url": (DOWNLOAD_URL+"{}.mp3").format(
+                tracks[i]["id"])} for i in range(TOP_NUM)]
         logger.debug("Playlist:\n{}".format(playlist))
 
         # Download the song and convert MP3 to OGG
@@ -92,9 +93,11 @@ def get_songs_rank(user_id: str, name: str, playlist_path: str, songs_path: str)
             
             platform_info = platform.platform()
             if "Windows" in platform_info:
-                convert_command = "ffmpeg -i {path}/{id}.mp3 -c:a libvorbis -n {path}/{id}.ogg 1>NUL 2>&1".format(path=songs_path, id=playlist[i]["id"])
+                convert_command = "ffmpeg -i {path}/{id}.mp3 -c:a libvorbis -n {path}/{id}.ogg 1>NUL 2>&1".format(
+                                path=songs_path, id=playlist[i]["id"])
             else:
-                convert_command = "ffmpeg -i {path}/{id}.mp3 -c:a libvorbis -n {path}/{id}.ogg 1>/dev/null 2>&1".format(path=songs_path, id=playlist[i]["id"])
+                convert_command = "ffmpeg -i {path}/{id}.mp3 -c:a libvorbis -n {path}/{id}.ogg 1>/dev/null 2>&1".format(
+                                path=songs_path, id=playlist[i]["id"])
             err_code = os.system(convert_command)
             if err_code != 0:
                 logger.warning("Fail to convert mp3 to ogg or the file already exists")
